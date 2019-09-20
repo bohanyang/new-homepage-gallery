@@ -1,3 +1,6 @@
+/.caddy.*
+/.idea/
+/Caddyfile
 
 ###> symfony/framework-bundle ###
 /.env.local
