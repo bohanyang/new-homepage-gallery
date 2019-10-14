@@ -1,12 +1,75 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}{% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
-    </body>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=" type="image/png">
+    <link href="https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/css/flat-ui.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-bottom: 150px;
+        }
+
+        .wallpaper {
+            width: 100%;
+        }
+
+        .footer {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .pgr {
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .story {
+            padding-top: 25px;
+        }
+
+        .flag {
+            width: 32px;
+        }
+
+        .para-of-date {
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
+
+        .flag-of-date {
+            width: 23px;
+        }
+    </style>
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+<div class="container-fluid">
+    {% block body %}{% endblock %}
+    <div class="row">
+        <div class="col-xs-12 footer">
+            <p class="text-right">
+                <a href="/p/1/">浏览图库</a>
+                /
+                <a href="https://www.microsoft.com/store/apps/9nblggh6cxp8" target="_blank">获取应用</a>
+                /
+                <a href="https://chat.daovoice.io/?id=59385141" target="_blank" rel="nofollow">联系反馈</a>
+                /
+                <a href="/settings/">设置</a>
+            </p>
+            <p class="text-left">
+                <a href="https://www.upyun.com/" target="_blank" rel="nofollow">
+                    <img src="https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5ceb86514a86485928.png" alt="UPYUN" style="height: 25px; margin-right: 5px;">
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/combine/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/js/vendor/jquery.min.js,gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/js/flat-ui.min.js"></script>
+{% block javascripts %}{% endblock %}
+</body>
 </html>
