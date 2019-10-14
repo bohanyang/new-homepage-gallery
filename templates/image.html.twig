@@ -11,7 +11,7 @@
             <button type="button" class="btn btn-link btn-block" data-toggle="modal" data-target="#about-image">下载图片</button>
         </div>
 
-        {% if image.vid.sources.1[2] %}
+        {% if image.vid.sources.1[2] is defined %}
             <div class="col-xs-12">
                 <a class="btn btn-link btn-block" href="https:{{ image.vid.sources.1[2] }}">
                     <strong>观赏视频</strong>
