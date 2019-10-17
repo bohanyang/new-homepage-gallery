@@ -44,9 +44,6 @@
             "./config/packages/dev/easy_log_handler.yaml"
         ]
     },
-    "heroku/heroku-buildpack-php": {
-        "version": "v163"
-    },
     "leancloud/leancloud-sdk": {
         "version": "v0.10.3"
     },
