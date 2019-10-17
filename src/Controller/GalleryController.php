@@ -40,4 +40,12 @@ class GalleryController extends AbstractController
             'res' => '1920x1080'
         ]);
     }
+
+    /**
+     * @Route("/server_error", name="server_error")
+     */
+    public function testError()
+    {
+        throw new \Exception("Aha, error triggered!");
+    }
 }
