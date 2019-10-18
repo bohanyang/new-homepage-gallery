@@ -40,12 +40,4 @@ class GalleryController extends AbstractController
             'res' => '1920x1080'
         ]);
     }
-
-    /**
-     * @Route("/ddcache", name="ddcache")
-     */
-    public function ddCache()
-    {
-        dd($this->cache);
-    }
 }
