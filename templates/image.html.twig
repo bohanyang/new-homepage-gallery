@@ -19,6 +19,25 @@
             </div>
         {% endif %}
     </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <table class="table table-striped">
+                {% for archive in image.archives %}
+                    <tr>
+                        <td>
+                            <a href="/archives/{{ archive.market }}/{{ archive.date }}/"><img class="flag" src="https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46198a0f5.png" alt="{{ archive.market }}">&nbsp;&nbsp;{{ archive.date }}</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="{{ archive.link }}">{{ archive.info }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+        </div>
+    </div>
     <div class="modal fade" id="about-image" tabindex="-1" role="dialog" aria-labelledby="about-image_label">
         <div class="modal-dialog" role="document">
             <div class="modal-content">

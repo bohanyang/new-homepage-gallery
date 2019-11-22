@@ -37,7 +37,7 @@ class LeanCloudRepository implements RepositoryContract
 
         if ($region !== null) {
             if (is_numeric($region)) {
-                $region = (int) $region;
+                $region = (int)$region;
             }
 
             Client::useRegion($region);
@@ -50,15 +50,46 @@ class LeanCloudRepository implements RepositoryContract
 
     public function getImage(string $name)
     {
-        /** @var LeanObject $result */
-        $result = (new Query(self::IMAGE_CLASS_NAME))
-            ->equalTo('name', $name)
-            ->first();
+        $innerQuery = new Query(self::IMAGE_CLASS_NAME);
+        $innerQuery->equalTo('name', $name);
 
-        if (!$result instanceof LeanObject) {
-            return null;
+        $query = new Query(self::ARCHIVE_CLASS_NAME);
+        $query->matchesInQuery('image', $innerQuery)
+            ->addDescend('date')
+            ->addDescend('market')
+            ->_include('image');
+
+        $results = $query->find();
+
+        if ($results === []) {
+            return false;
         }
 
-        return $result->toJSON();
+        $image = null;
+        $archives = [];
+
+        foreach ($results as $result) {
+            if (!$result instanceof LeanObject) {
+                return false;
+            }
+
+            $result = $result->toJSON();
+
+            if (!isset($image)) {
+                $image = $result['image'];
+            }
+
+            if ($image['objectId'] !== $result['image']['objectId']) {
+                return false;
+            }
+
+            unset($result['image']);
+
+            $archives[] = $result;
+        }
+
+        $image['archives'] = $archives;
+
+        return $image;
     }
 }
