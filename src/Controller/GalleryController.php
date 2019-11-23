@@ -13,7 +13,6 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class GalleryController extends AbstractController
 {
-
     private $repository;
     
     private $cache;
@@ -31,7 +30,6 @@ class GalleryController extends AbstractController
      */
     public function image(string $name, Request $request)
     {
-        /*
         $result = $this->cache->get("image.$name", function (ItemInterface $item) use ($name) {
             $tz = new DateTimeZone(self::TZ);
             $now = new DateTimeImmutable(null, $tz);
@@ -45,20 +43,15 @@ class GalleryController extends AbstractController
 
             return $this->repository->getImage($name);
         });
-        */
-
-        $result = $this->repository->getImage($name);
 
         if (!$result) {
             throw $this->createNotFoundException();
         }
 
-        $response = $this->render('image.html.twig', [
+        return $this->render('image.html.twig', [
             'image' => $result,
             'mirror' => 'https://img.penbeat.cn',
             'res' => $request->cookies->has('image_size') ? $request->cookies->get('image_size') : '1366x768'
         ]);
-
-        return $response;
     }
 }
