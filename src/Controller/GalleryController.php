@@ -6,6 +6,7 @@ use App\Repository\RepositoryContract;
 use DateTimeImmutable;
 use DateTimeZone;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -17,7 +18,7 @@ class GalleryController extends AbstractController
     
     private $cache;
 
-//    private const TZ = 'Asia/Shanghai';
+    private const TZ = 'Asia/Shanghai';
 
     public function __construct(RepositoryContract $repository, CacheInterface $cache)
     {
@@ -26,32 +27,38 @@ class GalleryController extends AbstractController
     }
 
     /**
-     * @Route("/images/{name}", name="image")
+     * @Route("/images/{name}/", name="image")
      */
-    public function image(string $name)
+    public function image(string $name, Request $request)
     {
+        /*
         $result = $this->cache->get("image.$name", function (ItemInterface $item) use ($name) {
-//            $tz = new DateTimeZone(self::TZ);
-//            $now = new DateTimeImmutable(null, $tz);
-//            $expiresAt = new DateTimeImmutable('15:04', $tz);
-//
-//            if ($expiresAt < $now) {
-//                $expiresAt = new DateTimeImmutable('tomorrow 15:04', $tz);
-//            }
-//
-//            $item->expiresAt($expiresAt);
+            $tz = new DateTimeZone(self::TZ);
+            $now = new DateTimeImmutable(null, $tz);
+            $expiresAt = new DateTimeImmutable('16:04', $tz);
+
+            if ($expiresAt < $now) {
+                $expiresAt = new DateTimeImmutable('tomorrow 16:04', $tz);
+            }
+
+            $item->expiresAt($expiresAt);
 
             return $this->repository->getImage($name);
         });
+        */
+
+        $result = $this->repository->getImage($name);
 
         if (!$result) {
             throw $this->createNotFoundException();
         }
 
-        return $this->render('image.html.twig', [
+        $response = $this->render('image.html.twig', [
             'image' => $result,
             'mirror' => 'https://img.penbeat.cn',
-            'res' => '1920x1080'
+            'res' => $request->cookies->has('image_size') ? $request->cookies->get('image_size') : '1366x768'
         ]);
+
+        return $response;
     }
 }

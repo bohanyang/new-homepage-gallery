@@ -1,0 +1,45 @@
+{% extends "base.html.twig" %}
+
+{% form_theme form _self %}
+
+{# Copied from "bootstrap_3_layout.html.twig" #}
+
+{% block form_row -%}
+    {%- set widget_attr = { label_attr: {class: 'radio'} } -%}
+    {%- if help is not empty -%}
+        {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}} -%}
+    {%- endif -%}
+    <div class="form-group{% if (not compound or force_error|default(false)) and not valid %} has-error{% endif %}">
+        {{- form_label(form, null, { element: 'h4' }) }} {# -#}
+        {{ form_widget(form, widget_attr) }} {# -#}
+        {{- form_help(form) -}}
+        {{ form_errors(form) }} {# -#}
+    </div> {# -#}
+{%- endblock form_row %}
+
+{% block radio_widget -%}
+    {{- form_label(form, null, { widget: block('radio_widget', 'bootstrap_base_layout.html.twig') }) -}}
+{%- endblock radio_widget %}
+
+{% block title %}设置{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-xs-12">
+            <h3>设置</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            {{ form_start(form) }}
+            {{ form_widget(form) }}
+            <button type="submit" class="btn btn-embossed btn-primary btn-lg">完成</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/combine/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/js/vendor/jquery.min.js,gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/js/flat-ui.min.js"></script>
+    <script>$(':radio').radiocheck();</script>
+{% endblock %}
