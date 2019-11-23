@@ -51,7 +51,7 @@ class GalleryController extends AbstractController
         return $this->render('image.html.twig', [
             'image' => $result,
             'mirror' => 'https://img.penbeat.cn',
-            'res' => $request->cookies->has('image_size') ? $request->cookies->get('image_size') : '1366x768'
+            'res' => $request->cookies->has('image') ? $request->cookies->get('image') : '1366x768'
         ]);
     }
 }
