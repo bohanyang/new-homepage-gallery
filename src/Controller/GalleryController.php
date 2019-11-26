@@ -3,32 +3,38 @@
 namespace App\Controller;
 
 use App\Repository\RepositoryContract;
+use App\Settings;
 use DateTimeImmutable;
 use DateTimeZone;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 class GalleryController extends AbstractController
 {
+    /** @var RepositoryContract */
     private $repository;
-    
+
+    /** @var CacheInterface */
     private $cache;
 
     private const TZ = 'Asia/Shanghai';
 
-    public function __construct(RepositoryContract $repository, CacheInterface $cache)
+    /** @var Settings */
+    private $settings;
+
+    public function __construct(RepositoryContract $repository, CacheInterface $cache, Settings $settings)
     {
         $this->repository = $repository;
         $this->cache = $cache;
+        $this->settings = $settings;
     }
 
     /**
      * @Route("/images/{name}/", name="image")
      */
-    public function image(string $name, Request $request)
+    public function image(string $name)
     {
         $result = $this->cache->get("image.$name", function (ItemInterface $item) use ($name) {
             $tz = new DateTimeZone(self::TZ);
@@ -51,7 +57,7 @@ class GalleryController extends AbstractController
         return $this->render('image.html.twig', [
             'image' => $result,
             'mirror' => 'https://img.penbeat.cn',
-            'res' => $request->cookies->has('image') ? $request->cookies->get('image') : '1366x768'
+            'res' => $this->settings->getImageSize()
         ]);
     }
 }
