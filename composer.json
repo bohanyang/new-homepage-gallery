@@ -2,13 +2,10 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "^7.1.3",
+        "php": "^7.2.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/cache": "^1.9",
         "leancloud/leancloud-sdk": "^0.10.3",
-        "sensio/framework-extra-bundle": "^5.4",
-        "symfony/asset": "*",
         "symfony/console": "*",
         "symfony/flex": "^1.3.1",
         "symfony/form": "*",
@@ -44,6 +41,7 @@
         "paragonie/random_compat": "2.*",
         "symfony/polyfill-ctype": "*",
         "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
         "symfony/polyfill-php71": "*",
         "symfony/polyfill-php70": "*",
         "symfony/polyfill-php56": "*"
