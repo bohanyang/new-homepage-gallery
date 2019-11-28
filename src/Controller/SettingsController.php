@@ -18,9 +18,6 @@ class SettingsController extends AbstractController
         $this->settings = $settings;
     }
 
-    /**
-     * @Route("/settings/", name="settings")
-     */
     public function index(Request $request)
     {
         $form = $this->createForm(SettingsFormType::class, [

@@ -31,9 +31,6 @@ class GalleryController extends AbstractController
         $this->settings = $settings;
     }
 
-    /**
-     * @Route("/images/{name}/", name="image")
-     */
     public function image(string $name)
     {
         $result = $this->cache->get("image.$name", function (ItemInterface $item) use ($name) {
