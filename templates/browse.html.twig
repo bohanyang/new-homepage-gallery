@@ -3,47 +3,46 @@
 {% block title %}{{ 'browse_page'|trans({'page': page}) }}{% endblock %}
 
 {% block body %}
-<div class="row">
-
-    <div class="col-xs-12 pgr">
-        <h5 class="text-primary">{{ 'browse_page'|trans({'page': page}) }}</h5>
-    </div>
-
-</div>
-{% for image in images %}
     <div class="row">
-        <div class="col-xs-12">
-            <a href="/images/{{ image.name }}/"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper"></a>
-        </div>
-        <div class="col-xs-12">
-            <p class="text-left">
-                <a href="/images/{{ image.name }}/">{{ image.name }}</a>
-            </p>
+        <div class="col-xs-12 pgr">
+            <h5 class="text-primary">{{ 'browse_page'|trans({'page': page}) }}</h5>
         </div>
     </div>
-{% endfor %}
-<div class="row">
-    <div class="col-xs-6 pgr">
-        {% if page > 1 %}
-            <a href="{{ path('browse', {page: page - 1}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
-                <i class="fui-arrow-left"></i>
-            </a>
-        {% else %}
-            <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
-                <i class="fui-arrow-left"></i>
-            </button>
-        {% endif %}
+    {% for image in images %}
+        <div class="row">
+            <div class="col-xs-12">
+                <a href="/images/{{ image.name }}/"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
+                                                         alt="{{ image.name }}" class="img-rounded wallpaper"></a>
+            </div>
+            <div class="col-xs-12">
+                <p class="text-left">
+                    <a href="/images/{{ image.name }}/">{{ image.name }}</a>
+                </p>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row">
+        <div class="col-xs-6 pgr">
+            {% if page > 1 %}
+                <a href="{{ path('browse', {page: page - 1}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
+                    <i class="fui-arrow-left"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
+                    <i class="fui-arrow-left"></i>
+                </button>
+            {% endif %}
+        </div>
+        <div class="col-xs-6 pgr">
+            {% if images|length < limit %}
+                <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
+                    <i class="fui-arrow-right"></i>
+                </button>
+            {% else %}
+                <a href="{{ path('browse', {page: page + 1}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
+                    <i class="fui-arrow-right"></i>
+                </a>
+            {% endif %}
+        </div>
     </div>
-    <div class="col-xs-6 pgr">
-        {% if images|length < limit %}
-            <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
-                <i class="fui-arrow-right"></i>
-            </button>
-        {% else %}
-            <a href="{{ path('browse', {page: page + 1}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
-                <i class="fui-arrow-right"></i>
-            </a>
-        {% endif %}
-    </div>
-</div>
 {% endblock %}

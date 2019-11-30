@@ -1,0 +1,94 @@
+{% extends "base.html.twig" %}
+
+{% block title %}{{ archive.info }}{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-xs-12">
+            <a href="/images/{{ image.name }}/"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
+                                                     alt="{{ archive.info }}" class="img-rounded wallpaper"></a>
+        </div>
+        <div class="col-xs-12">
+            <button type="button" class="btn btn-link btn-block" data-toggle="modal"
+                    data-target="#about-image">{{ 'download_image'|trans }}</button>
+        </div>
+        {% if image.vid.sources.1[2] is defined %}
+            <div class="col-xs-12">
+                <a class="btn btn-link btn-block" href="https:{{ image.vid.sources.1[2] }}">
+                    <strong>{{ 'play_video'|trans }}</strong>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-md-6 pgr">
+            <a href="/d/{{ archive.date.object|date('Ymd') }}/"
+               class="btn btn-embossed btn-primary btn-lg btn-block">{{ archive.market }}
+                ({{ archive.date.object|date('Y/m/d') }})</a>
+        </div>
+        <div class="col-xs-6 col-md-3 pgr">
+            <a href="{{ path('archive', {market: archive.market, date: archive.date.previous}) }}"
+               class="btn btn-embossed btn-primary btn-lg btn-block">
+                <i class="fui-arrow-left"></i>
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3 pgr">
+            {% if archive.date.old %}
+                <a href="{{ path('archive', {market: archive.market, date: archive.date.next}) }}"
+                   class="btn btn-embossed btn-primary btn-lg btn-block">
+                    <i class="fui-arrow-right"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
+                    <i class="fui-arrow-right"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    {% if archive.cs is defined %}
+        <div class="row">
+            <div class="col-xs-12 story">
+                <blockquote>
+                    <p>
+                        <strong>{{ archive.cs.attribute }}: {{ archive.cs.title }}</strong>
+                    </p>
+                    <p>{{ archive.cs.para1 }}</p>
+                </blockquote>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-xs-12">
+            <table class="table table-striped">
+                <tr>
+                    <td>
+                        <a href="{{ archive.link }}">
+                            <strong>{{ archive.info }}</strong>
+                        </a>
+                    </td>
+                </tr>
+                {% if archive.msg is defined %}
+                    {% for message in archive.msg %}
+                        <tr>
+                            <td>{{ message.title }} <a href="{{ message.link }}">
+                                    <strong>{{ message.text }}</strong>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+                {% if archive.hs is defined %}
+                    {% for hotspot in archive.hs %}
+                        <tr>
+                            <td>{{ hotspot.desc }} <a href="{{ hotspot.link }}">
+                                    <strong>{{ hotspot.query }}</strong>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </table>
+        </div>
+    </div>
+    {{ include('_includes/image_modal.html.twig') }}
+{% endblock %}

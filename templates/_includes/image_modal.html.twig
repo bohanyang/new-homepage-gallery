@@ -1,0 +1,44 @@
+<div class="modal fade" id="about-image" tabindex="-1" role="dialog" aria-labelledby="about-image_label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="about-image_label">{{ 'download_image'|trans }}</h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 5px;">
+                <ul>
+                    <li>
+                        {% if image.wp %}
+                            <a href="{{ mirror }}{{ image.urlbase }}_1920x1200.jpg"
+                               target="_blank">{{ 'image_sizes.1920x1200'|trans }}</a>
+                        {% else %}
+                            <strong>{{ 'not_available'|trans }}</strong>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1920x1080.jpg"
+                           target="_blank">{{ 'image_sizes.1920x1080'|trans }}</a>
+                    </li>
+                    <li>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1080x1920.jpg"
+                           target="_blank">{{ 'image_sizes.1080x1920'|trans }}</a>
+                    </li>
+                    <li>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1366x768.jpg"
+                           target="_blank">{{ 'image_sizes.1366x768'|trans }}</a>
+                    </li>
+                    <li>
+                        <a href="{{ mirror }}{{ image.urlbase }}_768x1280.jpg"
+                           target="_blank">{{ 'image_sizes.768x1280'|trans }}</a>
+                    </li>
+                </ul>
+                <small class="text-muted">&copy; {{ image.copyright }}</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">{{ 'close_modal'|trans }}</button>
+            </div>
+        </div>
+    </div>
+</div>
