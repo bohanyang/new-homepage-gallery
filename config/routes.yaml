@@ -1,3 +1,8 @@
+homepage:
+    path: /
+    controller: App\Controller\GalleryController::archive
+    methods: GET|HEAD
+
 image:
     path: /images/{name}/
     controller: App\Controller\GalleryController::image
@@ -10,6 +15,14 @@ browse:
     controller: App\Controller\GalleryController::browse
     requirements:
         page: '\d+'
+    methods: GET|HEAD
+
+archive:
+    path: /archives/{market}/{date}/
+    controller: App\Controller\GalleryController::archive
+    requirements:
+        market: '[a-z]{2}-[A-Z]{2}'
+        date: '\d{8}'
     methods: GET|HEAD
 
 settings:
