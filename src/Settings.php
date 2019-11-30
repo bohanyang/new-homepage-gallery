@@ -1,9 +1,9 @@
 <?php
 
-
 namespace App;
 
 use Symfony\Component\HttpFoundation\Cookie;
+
 use function time;
 
 class Settings

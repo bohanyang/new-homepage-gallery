@@ -6,7 +6,6 @@ use App\Form\SettingsFormType;
 use App\Settings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class SettingsController extends AbstractController
 {
@@ -20,11 +19,14 @@ class SettingsController extends AbstractController
 
     public function index(Request $request)
     {
-        $form = $this->createForm(SettingsFormType::class, [
-            'imageSize' => $this->settings->getImageSize(),
-            'thumbnailSize' => $this->settings->getThumbnailSize(),
-            'referrer' => $request->headers->get('referer')
-        ]);
+        $form = $this->createForm(
+            SettingsFormType::class,
+            [
+                'imageSize' => $this->settings->getImageSize(),
+                'thumbnailSize' => $this->settings->getThumbnailSize(),
+                'referrer' => $request->headers->get('referer')
+            ]
+        );
 
         $form->handleRequest($request);
 
@@ -54,8 +56,11 @@ class SettingsController extends AbstractController
             return $this->redirect($redirectTo);
         }
 
-        return $this->render('settings.html.twig', [
-            'form' => $form->createView()
-        ]);
+        return $this->render(
+            'settings.html.twig',
+            [
+                'form' => $form->createView()
+            ]
+        );
     }
 }

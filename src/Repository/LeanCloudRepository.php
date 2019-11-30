@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use InvalidArgumentException;
 use LeanCloud\Client;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
@@ -20,8 +21,7 @@ class LeanCloudRepository implements RepositoryContract
         ?string $region = null,
         ?string $kernelEnv = null,
         ?bool $debug = null
-    )
-    {
+    ) {
         $appMasterKey = $appMasterKey ?? '';
 
         Client::initialize($appId, $appKey, $appMasterKey);
@@ -37,7 +37,7 @@ class LeanCloudRepository implements RepositoryContract
 
         if ($region !== null) {
             if (is_numeric($region)) {
-                $region = (int)$region;
+                $region = (int) $region;
             }
 
             Client::useRegion($region);
@@ -54,7 +54,8 @@ class LeanCloudRepository implements RepositoryContract
         $innerQuery->equalTo('name', $name);
 
         $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query->matchesInQuery('image', $innerQuery)
+        $query
+            ->matchesInQuery('image', $innerQuery)
             ->addDescend('date')
             ->addDescend('market')
             ->_include('image');
@@ -91,5 +92,28 @@ class LeanCloudRepository implements RepositoryContract
         $image['archives'] = $archives;
 
         return $image;
+    }
+
+    public function listImages(int $limit, int $page = 1)
+    {
+        if ($limit < 1) {
+            throw new InvalidArgumentException('The limit should be an integer greater than or equal to 1.');
+        }
+
+        if ($page < 1) {
+            throw new InvalidArgumentException('The page number should be an integer greater than or equal to 1.');
+        }
+
+        $skip = $limit * ($page - 1);
+
+        $query = new Query(self::IMAGE_CLASS_NAME);
+        $query
+            ->limit($limit)
+            ->skip($skip)
+            ->addDescend('createdAt');
+
+        return array_map(function (LeanObject $object) {
+            return $object->toJSON();
+        }, $query->find());
     }
 }

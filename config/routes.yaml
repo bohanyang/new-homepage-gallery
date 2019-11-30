@@ -1,6 +1,15 @@
 image:
     path: /images/{name}/
     controller: App\Controller\GalleryController::image
+    requirements:
+        name: '\w+'
+    methods: GET|HEAD
+
+browse:
+    path: /p/{page}/
+    controller: App\Controller\GalleryController::browse
+    requirements:
+        page: '\d+'
     methods: GET|HEAD
 
 settings:
