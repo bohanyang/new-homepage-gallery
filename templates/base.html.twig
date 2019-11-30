@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="{{ app.request.locale|replace({'_': '-'}) }}">
 
 <head>
     <meta charset="UTF-8">
@@ -53,13 +53,13 @@
     <div class="row">
         <div class="col-xs-12 footer">
             <p class="text-right">
-                <a href="/p/1/">浏览图库</a>
+                <a href="/p/1/">{{ 'browse'|trans }}</a>
                 /
-                <a href="https://www.microsoft.com/store/apps/9nblggh6cxp8" target="_blank">获取应用</a>
+                <a href="https://www.microsoft.com/store/apps/9nblggh6cxp8" target="_blank">{{ 'get_app'|trans }}</a>
                 /
-                <a href="https://chat.daovoice.io/?id=59385141" target="_blank" rel="nofollow">联系反馈</a>
+                <a href="https://chat.daovoice.io/?id=59385141" target="_blank" rel="nofollow">{{ 'contact'|trans }}</a>
                 /
-                <a href="{{ path('settings') }}">设置</a>
+                <a href="{{ path('settings') }}">{{ 'settings'|trans }}</a>
             </p>
             <p class="text-left">
                 <a href="https://www.upyun.com/" target="_blank" rel="nofollow">

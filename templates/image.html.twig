@@ -1,5 +1,7 @@
 {% extends "base.html.twig" %}
+
 {% block title %}{{ image.name }}{% endblock %}
+
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
@@ -8,13 +10,13 @@
     </div>
     <div class="row">
         <div class="col-xs-12">
-            <button type="button" class="btn btn-link btn-block" data-toggle="modal" data-target="#about-image">下载图片</button>
+            <button type="button" class="btn btn-link btn-block" data-toggle="modal" data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
 
         {% if image.vid.sources.1[2] is defined %}
             <div class="col-xs-12">
                 <a class="btn btn-link btn-block" href="https:{{ image.vid.sources.1[2] }}">
-                    <strong>观赏视频</strong>
+                    <strong>{{ 'play_video'|trans }}</strong>
                 </a>
             </div>
         {% endif %}
@@ -45,34 +47,34 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
-                    <h4 class="modal-title" id="about-image_label">下载图片</h4>
+                    <h4 class="modal-title" id="about-image_label">{{ 'download_image'|trans }}</h4>
                 </div>
                 <div class="modal-body" style="padding-bottom: 5px;">
                     <ul>
                         <li>
                             {% if image.wp %}
-                                <a href="{{ mirror }}{{ image.urlbase }}_1920x1200.jpg" target="_blank">1920x1200 (原图)</a>
+                                <a href="{{ mirror }}{{ image.urlbase }}_1920x1200.jpg" target="_blank">{{ 'image_sizes.1920x1200'|trans }}</a>
                             {% else %}
-                                <strong>版权限制，无法提供&nbsp;1920x1200&nbsp;原图&nbsp;:-(</strong>
+                                <strong>{{ 'not_available'|trans }}</strong>
                             {% endif %}
                         </li>
                         <li>
-                            <a href="{{ mirror }}{{ image.urlbase }}_1920x1080.jpg" target="_blank">1920x1080 (横)</a>
+                            <a href="{{ mirror }}{{ image.urlbase }}_1920x1080.jpg" target="_blank">{{ 'image_sizes.1920x1080'|trans }}</a>
                         </li>
                         <li>
-                            <a href="{{ mirror }}{{ image.urlbase }}_1080x1920.jpg" target="_blank">1080x1920 (竖)</a>
+                            <a href="{{ mirror }}{{ image.urlbase }}_1080x1920.jpg" target="_blank">{{ 'image_sizes.1080x1920'|trans }}</a>
                         </li>
                         <li>
-                            <a href="{{ mirror }}{{ image.urlbase }}_1366x768.jpg" target="_blank">1366x768 (横)</a>
+                            <a href="{{ mirror }}{{ image.urlbase }}_1366x768.jpg" target="_blank">{{ 'image_sizes.1366x768'|trans }}</a>
                         </li>
                         <li>
-                            <a href="{{ mirror }}{{ image.urlbase }}_768x1280.jpg" target="_blank">768x1280 (竖)</a>
+                            <a href="{{ mirror }}{{ image.urlbase }}_768x1280.jpg" target="_blank">{{ 'image_sizes.768x1280'|trans }}</a>
                         </li>
                     </ul>
                     <small class="text-muted">&copy;&nbsp;{{ image.copyright }}</small>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">{{ 'close_modal'|trans }}</button>
                 </div>
             </div>
         </div>
