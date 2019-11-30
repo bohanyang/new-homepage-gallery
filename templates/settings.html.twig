@@ -21,19 +21,19 @@
     {{- form_label(form, null, { widget: block('radio_widget', 'bootstrap_base_layout.html.twig') }) -}}
 {%- endblock radio_widget %}
 
-{% block title %}设置{% endblock %}
+{% block title %}{{ 'settings'|trans }}{% endblock %}
 
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
-            <h3>设置</h3>
+            <h3>{{ 'settings'|trans }}</h3>
         </div>
     </div>
     <div class="row">
         <div class="col-xs-12">
             {{ form_start(form) }}
             {{ form_widget(form) }}
-            <button type="submit" class="btn btn-embossed btn-primary btn-lg">完成</button>
+            <button type="submit" class="btn btn-embossed btn-primary btn-lg">{{ 'submit'|trans }}</button>
             {{ form_end(form) }}
         </div>
     </div>

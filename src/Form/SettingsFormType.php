@@ -14,30 +14,31 @@ class SettingsFormType extends AbstractType
     {
         $defaults = [
             'constraints' => [new NotBlank([
-                'message' => '请从这些选项中选择一个'
+                'message' => 'blank_choice'
             ])],
-            'invalid_message' => '请选择列表中的一项'
+            'invalid_message' => 'invalid_choice',
+            'translation_domain' => 'settings_form',
         ];
 
         $builder
             ->add('imageSize', ChoiceType::class, [
-                'label' => '图片尺寸',
+                'label' => 'image_size',
                 'choices' => [
-                    '1920x1080 (高清; 横向)' => '1920x1080',
-                    '1366x768 (标准; 横向)' => '1366x768',
-                    '1080x1920 (高清; 纵向)' => '1080x1920',
-                    '768x1280 (标准; 纵向)' => '768x1280',
+                    'image_sizes.1920x1080' => '1920x1080',
+                    'image_sizes.1366x768' => '1366x768',
+                    'image_sizes.1080x1920' => '1080x1920',
+                    'image_sizes.768x1280' => '768x1280',
                 ],
-                'expanded' => true
+                'expanded' => true,
             ] + $defaults)
             ->add('thumbnailSize', ChoiceType::class, [
-                'label' => '缩略图尺寸',
+                'label' => 'thumbnail_size',
                 'choices' => [
-                    '800x480 (标准; 横向)' => '800x480',
-                    '480x800 (标准; 纵向)' => '480x800',
-                    '1366x768 (高清; 横向)' => '1366x768',
+                    'thumbnail_sizes.800x480' => '800x480',
+                    'thumbnail_sizes.480x800' => '480x800',
+                    'thumbnail_sizes.1366x768' => '1366x768',
                 ],
-                'expanded' => true
+                'expanded' => true,
             ] + $defaults)
             ->add('referrer', HiddenType::class)
         ;
