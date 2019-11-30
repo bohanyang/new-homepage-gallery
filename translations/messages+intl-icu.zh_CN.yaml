@@ -7,6 +7,7 @@ download_image: '下载图片'
 not_available: '版权限制，无法提供 1920x1200 原图 :-('
 close_modal: '关闭'
 submit: '提交'
+browse_page: '第 { page } 页'
 
 image_sizes:
     1920x1200: '1920x1200 (原图)'

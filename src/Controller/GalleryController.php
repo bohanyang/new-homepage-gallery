@@ -23,11 +23,17 @@ class GalleryController extends AbstractController
     /** @var Settings */
     private $settings;
 
+    /** @var DateTimeZone */
+    private $tz;
+
+    private $mirror = 'https://img.penbeat.cn';
+
     public function __construct(RepositoryContract $repository, CacheInterface $cache, Settings $settings)
     {
         $this->repository = $repository;
         $this->cache = $cache;
         $this->settings = $settings;
+        $this->tz = new DateTimeZone(self::TZ);
     }
 
     public function image(string $name)
@@ -35,15 +41,7 @@ class GalleryController extends AbstractController
         $result = $this->cache->get(
             "image.$name",
             function (ItemInterface $item) use ($name) {
-                $tz = new DateTimeZone(self::TZ);
-                $now = new DateTimeImmutable(null, $tz);
-                $expiresAt = new DateTimeImmutable('16:04', $tz);
-
-                if ($expiresAt < $now) {
-                    $expiresAt = new DateTimeImmutable('tomorrow 16:04', $tz);
-                }
-
-                $item->expiresAt($expiresAt);
+                $this->expiresAt($item);
 
                 return $this->repository->getImage($name);
             }
@@ -57,9 +55,44 @@ class GalleryController extends AbstractController
             'image.html.twig',
             [
                 'image' => $result,
-                'mirror' => 'https://img.penbeat.cn',
+                'mirror' => $this->mirror,
                 'res' => $this->settings->getImageSize()
             ]
         );
+    }
+
+    public function browse(int $page)
+    {
+        $limit = 15;
+        $results = $this->cache->get(
+            "browse.$page",
+            function (ItemInterface $item) use ($limit, $page) {
+                $this->expiresAt($item);
+
+                return $this->repository->listImages($limit, $page);
+            }
+        );
+
+        return $this->render(
+            'browse.html.twig',
+            [
+                'limit' => $limit,
+                'page' => $page,
+                'images' => $results,
+                'mirror' => $this->mirror,
+                'res' => $this->settings->getThumbnailSize()
+            ]
+        );
+    }
+
+    private function expiresAt(ItemInterface $item) {
+        $now = new DateTimeImmutable(null, $this->tz);
+        $expiresAt = new DateTimeImmutable('16:04', $this->tz);
+
+        if ($expiresAt < $now) {
+            $expiresAt = new DateTimeImmutable('tomorrow 16:04', $this->tz);
+        }
+
+        return $item->expiresAt($expiresAt);
     }
 }
