@@ -20,8 +20,7 @@ class LeanCloudRepository implements RepositoryContract
         ?string $region = null,
         ?string $kernelEnv = null,
         ?bool $debug = null
-    )
-    {
+    ) {
         $appMasterKey = $appMasterKey ?? '';
 
         Client::initialize($appId, $appKey, $appMasterKey);
