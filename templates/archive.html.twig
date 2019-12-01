@@ -1,20 +1,23 @@
 {% extends "base.html.twig" %}
 
+{% set formattedDate = date.object|date('Y/m/d') %}
+
 {% block title %}{{ archive.info }}{% endblock %}
 
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
-            <a href="/images/{{ image.name }}/"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
-                                                     alt="{{ archive.info }}" class="img-rounded wallpaper"></a>
+            <a href="{{ path('image', {name: image.name}) }}"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
+                                                                   alt="{{ archive.info }}"
+                                                                   class="img-rounded wallpaper"></a>
         </div>
         <div class="col-xs-12">
             <button type="button" class="btn btn-link btn-block" data-toggle="modal"
                     data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
-        {% if image.vid.sources.1[2] is defined %}
+        {% if video is not empty %}
             <div class="col-xs-12">
-                <a class="btn btn-link btn-block" href="https:{{ image.vid.sources.1[2] }}">
+                <a class="btn btn-link btn-block" href="{{ video }}">
                     <strong>{{ 'play_video'|trans }}</strong>
                 </a>
             </div>
@@ -22,19 +25,19 @@
     </div>
     <div class="row">
         <div class="col-xs-12 col-md-6 pgr">
-            <a href="/d/{{ archive.date.object|date('Ymd') }}/"
-               class="btn btn-embossed btn-primary btn-lg btn-block">{{ archive.market }}
-                ({{ archive.date.object|date('Y/m/d') }})</a>
+            <a href="{{ path('date', {date: date.current}) }}"
+               class="btn btn-embossed btn-primary btn-lg btn-block">{{ ('markets.' ~ archive.market) | trans }}
+                ({{ formattedDate }})</a>
         </div>
         <div class="col-xs-6 col-md-3 pgr">
-            <a href="{{ path('archive', {market: archive.market, date: archive.date.previous}) }}"
+            <a href="{{ path('archive', {market: archive.market, date: date.previous}) }}"
                class="btn btn-embossed btn-primary btn-lg btn-block">
                 <i class="fui-arrow-left"></i>
             </a>
         </div>
         <div class="col-xs-6 col-md-3 pgr">
-            {% if archive.date.old %}
-                <a href="{{ path('archive', {market: archive.market, date: archive.date.next}) }}"
+            {% if date.old %}
+                <a href="{{ path('archive', {market: archive.market, date: date.next}) }}"
                    class="btn btn-embossed btn-primary btn-lg btn-block">
                     <i class="fui-arrow-right"></i>
                 </a>
@@ -62,7 +65,7 @@
             <table class="table table-striped">
                 <tr>
                     <td>
-                        <a href="{{ archive.link }}">
+                        <a href="{{ archive.link }}" target="_blank" rel="nofollow">
                             <strong>{{ archive.info }}</strong>
                         </a>
                     </td>
@@ -70,7 +73,7 @@
                 {% if archive.msg is defined %}
                     {% for message in archive.msg %}
                         <tr>
-                            <td>{{ message.title }} <a href="{{ message.link }}">
+                            <td>{{ message.title }} <a href="{{ message.link }}" target="_blank" rel="nofollow">
                                     <strong>{{ message.text }}</strong>
                                 </a>
                             </td>
@@ -80,7 +83,7 @@
                 {% if archive.hs is defined %}
                     {% for hotspot in archive.hs %}
                         <tr>
-                            <td>{{ hotspot.desc }} <a href="{{ hotspot.link }}">
+                            <td>{{ hotspot.desc }} <a href="{{ hotspot.link }}" target="_blank" rel="nofollow">
                                     <strong>{{ hotspot.query }}</strong>
                                 </a>
                             </td>

@@ -8,6 +8,10 @@ parameters:
     env(LEANCLOUD_API_SERVER): ~
     env(LEANCLOUD_APP_ENV): ~
     env(LEANCLOUD_REGION): ~
+    env(APP_IMAGE_ORIGIN): ~
+    env(APP_VIDEO_ORIGIN): ~
+    app.image_origin: '%env(APP_IMAGE_ORIGIN)%'
+    app.video_origin: '%env(APP_VIDEO_ORIGIN)%'
 
 services:
     # default configuration for services in *this* file

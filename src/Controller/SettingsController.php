@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Form\SettingsFormType;
 use App\Settings;
+use League\Uri\UriString;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -35,15 +36,14 @@ class SettingsController extends AbstractController
             $referrer = $form['referrer']->getData();
 
             if ($referrer !== null) {
-                $referrer = parse_url($referrer);
-                if ($referrer !== false) {
-                    if (isset($referrer['path'])) {
-                        $redirectTo .= $referrer['path'];
-                    }
-                    if (isset($referrer['query'])) {
-                        $redirectTo .= "?{$referrer['query']}";
-                    }
-                }
+                $referrer = UriString::parse($referrer);
+                unset($referrer['scheme']);
+                unset($referrer['user']);
+                unset($referrer['pass']);
+                unset($referrer['host']);
+                unset($referrer['port']);
+                unset($referrer['fragment']);
+                $redirectTo = UriString::build($referrer);
             }
 
             $this->settings->setImageSize($form['imageSize']->getData());

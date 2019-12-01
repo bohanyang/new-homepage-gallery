@@ -14,6 +14,12 @@
             "./config/packages/dev/easy_log_handler.yaml"
         ]
     },
+    "league/uri": {
+        "version": "6.0.1"
+    },
+    "league/uri-interfaces": {
+        "version": "2.0.0"
+    },
     "leancloud/leancloud-sdk": {
         "version": "v0.10.3"
     },
@@ -23,6 +29,9 @@
     "nikic/php-parser": {
         "version": "v4.3.0"
     },
+    "php": {
+        "version": "7.4"
+    },
     "psr/cache": {
         "version": "1.0.1"
     },
@@ -31,6 +40,9 @@
     },
     "psr/event-dispatcher": {
         "version": "1.0.0"
+    },
+    "psr/http-message": {
+        "version": "1.0.1"
     },
     "psr/log": {
         "version": "1.1.2"

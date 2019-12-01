@@ -5,14 +5,16 @@
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
-            <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
+            <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}"
+                 class="img-rounded wallpaper">
         </div>
         <div class="col-xs-12">
-            <button type="button" class="btn btn-link btn-block" data-toggle="modal" data-target="#about-image">{{ 'download_image'|trans }}</button>
+            <button type="button" class="btn btn-link btn-block" data-toggle="modal"
+                    data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
-        {% if image.vid.sources.1[2] is defined %}
+        {% if video is not empty %}
             <div class="col-xs-12">
-                <a class="btn btn-link btn-block" href="https:{{ image.vid.sources.1[2] }}">
+                <a class="btn btn-link btn-block" href="{{ video }}">
                     <strong>{{ 'play_video'|trans }}</strong>
                 </a>
             </div>
@@ -24,12 +26,15 @@
                 {% for archive in image.archives %}
                     <tr>
                         <td>
-                            <a href="/archives/{{ archive.market }}/{{ archive.date }}/"><img class="flag" src="https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46198a0f5.png" alt="{{ archive.market }}">  {{ archive.date }}</a>
+                            <a href="{{ path('archive', {market: archive.market, date: archive.date}) }}"><img
+                                        class="flag" src="{{ attribute(flags, archive.market) }}"
+                                        alt="{{ archive.market }}"> {{ archive.date }}</a>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <a href="{{ archive.link }}"><span lang="{{ archive.market }}">{{ archive.info }}</span></a>
+                            <a href="{{ archive.link }}" target="_blank" rel="nofollow"><span
+                                        lang="{{ archive.market }}">{{ archive.info }}</span></a>
                         </td>
                     </tr>
                 {% endfor %}
