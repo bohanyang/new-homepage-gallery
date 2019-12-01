@@ -62,9 +62,6 @@
             "@auto-scripts"
         ]
     },
-    "platform": {
-        "php": "7.2.5"
-    },
     "conflict": {
         "symfony/symfony": "*"
     },
