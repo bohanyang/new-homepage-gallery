@@ -8,18 +8,36 @@ use App\Settings;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use League\Uri\UriString;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 final class GalleryController extends AbstractController
 {
-    public const TZ = 'Asia/Shanghai';
-    public const DATE_STRING_FORMAT = 'Ymd';
-    public const EXPIRE_TIME = '16:04';
-    public const PUBLISH_TIME = '16:05';
-    public const DEFAULT_MARKET = 'zh-CN';
+    private const TZ = 'Asia/Shanghai';
+    private const DATE_STRING_FORMAT = 'Ymd';
+    private const EXPIRE_TIME = '16:04';
+    private const PUBLISH_TIME = '16:05';
+    private const DEFAULT_MARKET = 'zh-CN';
+    private const FLAGS = [
+        'zh-CN' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46198a0f5.png',
+        'en-US' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe461b2f231.png',
+        'en-GB' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46191e2f3.png',
+        'en-AU' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe461988908.png',
+        'en-CA' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe461a269d3.png',
+        'fr-FR' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe461a8c16a.png',
+        'de-DE' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46198703c.png',
+        'pt-BR' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe4619217f5.png',
+        'ja-JP' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe461a1faf8.png',
+        'fr-CA' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe478326de0.png',
+        'en-IN' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46191fbec.png'
+    ];
+
+    /** @var DateTimeZone */
+    private $tz;
 
     /** @var RepositoryContract */
     private $repository;
@@ -30,17 +48,40 @@ final class GalleryController extends AbstractController
     /** @var Settings */
     private $settings;
 
-    /** @var DateTimeZone */
-    private $tz;
+    /** @var array */
+    private $params = [];
 
-    private $mirror = 'https://img.penbeat.cn';
-
-    public function __construct(RepositoryContract $repository, CacheInterface $cache, Settings $settings)
-    {
+    public function __construct(
+        RepositoryContract $repository,
+        CacheInterface $cache,
+        Settings $settings,
+        ContainerBagInterface $params
+    ) {
+        $this->tz = new DateTimeZone(self::TZ);
         $this->repository = $repository;
         $this->cache = $cache;
         $this->settings = $settings;
-        $this->tz = new DateTimeZone(self::TZ);
+        $this->params['image_origin'] = self::getOptionalParam(
+            $params,
+            'app.image_origin',
+            'https://www.bing.com'
+        );
+        $this->params['video_origin'] = self::getOptionalParam(
+            $params,
+            'app.video_origin',
+            'https://az29176.vo.msecnd.net'
+        );
+    }
+
+    private static function getOptionalParam(ContainerBagInterface $params, string $key, $default)
+    {
+        if ($params->has($key)) {
+            $value = $params->get($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+        return $default;
     }
 
     public function image(string $name)
@@ -58,13 +99,14 @@ final class GalleryController extends AbstractController
             throw $this->createNotFoundException($e->getMessage());
         }
 
-
         return $this->render(
             'image.html.twig',
             [
                 'image' => $result,
-                'mirror' => $this->mirror,
-                'res' => $this->settings->getImageSize()
+                'mirror' => $this->params['image_origin'],
+                'video' => $this->getVideoUrl($result),
+                'res' => $this->settings->getImageSize(),
+                'flags' => self::FLAGS
             ]
         );
     }
@@ -77,7 +119,7 @@ final class GalleryController extends AbstractController
                 "browse.$page",
                 function (ItemInterface $item) use ($limit, $page) {
                     $this->expiresAt($item);
-    
+
                     return $this->repository->listImages($limit, $page);
                 }
             );
@@ -91,8 +133,37 @@ final class GalleryController extends AbstractController
                 'limit' => $limit,
                 'page' => $page,
                 'images' => $results,
-                'mirror' => $this->mirror,
+                'mirror' => $this->params['image_origin'],
                 'res' => $this->settings->getThumbnailSize()
+            ]
+        );
+    }
+
+    public function date(string $date)
+    {
+        $dateInfo = $this->getDateStringInfo($date);
+
+        try {
+            $results = $this->cache->get(
+                "date.$date",
+                function (ItemInterface $item) use ($dateInfo) {
+                    $this->expiresAt($item);
+
+                    return $this->repository->getArchivesByDate($dateInfo['object']);
+                }
+            );
+        } catch (NotFoundException $e) {
+            throw $this->createNotFoundException($e->getMessage());
+        }
+
+        return $this->render(
+            'date.html.twig',
+            [
+                'images' => $results,
+                'mirror' => $this->params['image_origin'],
+                'res' => $this->settings->getThumbnailSize(),
+                'flags' => self::FLAGS,
+                'date' => $dateInfo
             ]
         );
     }
@@ -117,22 +188,21 @@ final class GalleryController extends AbstractController
             $date = $date->format(self::DATE_STRING_FORMAT);
         }
 
-        $dateInfo = $this->getDateStringInfo($date);
+        $date = $this->getDateStringInfo($date);
 
         try {
             $result = $this->cache->get(
-                "archive.$market." . $date,
-                function (ItemInterface $item) use ($market, $dateInfo) {
+                "archive.$market." . $date['current'],
+                function (ItemInterface $item) use ($market, $date) {
                     $this->expiresAt($item);
 
-                    return $this->repository->getArchive($market, $dateInfo['object']);
+                    return $this->repository->getArchive($market, $date['object']);
                 }
             );
         } catch (NotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage());
         }
 
-        $result['date'] = $dateInfo;
         $image = $result['image'];
         unset($result['image']);
 
@@ -141,8 +211,10 @@ final class GalleryController extends AbstractController
             [
                 'archive' => $result,
                 'image' => $image,
-                'mirror' => $this->mirror,
-                'res' => $this->settings->getImageSize()
+                'mirror' => $this->params['image_origin'],
+                'video' => $this->getVideoUrl($image),
+                'res' => $this->settings->getImageSize(),
+                'date' => $date
             ]
         );
     }
@@ -174,6 +246,7 @@ final class GalleryController extends AbstractController
         $return = [
             'object' => $date,
             'old' => $old,
+            'current' => $dateString,
             'previous' => $previous
         ];
 
@@ -183,5 +256,22 @@ final class GalleryController extends AbstractController
         }
 
         return $return;
+    }
+
+    private function getVideoUrl($image)
+    {
+        if (empty($image['vid']['sources'][1][2])) {
+            return '';
+        }
+
+        $url = UriString::parse($image['vid']['sources'][1][2]);
+        $origin = UriString::parse($this->params['video_origin']);
+        $url['scheme'] = $origin['scheme'];
+        $url['user'] = $origin['user'];
+        $url['pass'] = $origin['pass'];
+        $url['host'] = $origin['host'];
+        $url['path'] = $origin['path'] . $url['path'];
+
+        return UriString::build($url);
     }
 }

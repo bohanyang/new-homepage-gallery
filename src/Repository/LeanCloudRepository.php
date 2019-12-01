@@ -67,27 +67,24 @@ class LeanCloudRepository implements RepositoryContract
             throw new NotFoundException('Image not found.');
         }
 
-        $image = null;
-        $archives = [];
+        $image = [];
 
         foreach ($results as $result) {
             $result = $result->toJSON();
 
-            if (!isset($image)) {
+            if ($image === []) {
                 $image = $result['image'];
             }
 
             unset($result['image']);
 
-            $archives[] = $result;
+            $image['archives'][] = $result;
         }
-
-        $image['archives'] = $archives;
 
         return $image;
     }
 
-    public function listImages(int $limit, int $page = 1)
+    public function listImages(int $limit, int $page)
     {
         if ($limit < 1) {
             throw new InvalidArgumentException('The limit should be an integer greater than or equal to 1.');
@@ -105,9 +102,12 @@ class LeanCloudRepository implements RepositoryContract
             ->skip($skip)
             ->addDescend('createdAt');
 
-        return array_map(function (LeanObject $object) {
-            return $object->toJSON();
-        }, $query->find());
+        return array_map(
+            function (LeanObject $object) {
+                return $object->toJSON();
+            },
+            $query->find()
+        );
     }
 
     public function getArchive(string $market, DateTimeInterface $date)
@@ -126,5 +126,38 @@ class LeanCloudRepository implements RepositoryContract
         }
 
         return $result->toJSON();
+    }
+
+    public function getArchivesByDate(DateTimeInterface $date)
+    {
+        $query = new Query(self::ARCHIVE_CLASS_NAME);
+
+        $query
+            ->equalTo('date', $date->format('Ymd'))
+            ->addDescend('market')
+            ->_include('image');
+
+        $results = $query->find();
+
+        if ($results === []) {
+            throw new NotFoundException('No archives found.');
+        }
+
+        $images = [];
+
+        foreach ($results as $result) {
+            $result = $result->toJSON();
+            $imageId = $result['image']['objectId'];
+
+            if (!isset($images[$imageId])) {
+                $images[$imageId] = $result['image'];
+            }
+
+            unset($result['image']);
+
+            $images[$imageId]['archives'][] = $result;
+        }
+
+        return $images;
     }
 }

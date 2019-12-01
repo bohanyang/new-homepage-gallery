@@ -1,0 +1,53 @@
+{% extends "base.html.twig" %}
+
+{% set formattedDate = date.object|date('Y/m/d') %}
+
+{% block title %}{{ formattedDate }}{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-xs-12" style="padding-top: 10px; padding-bottom: 10px">
+            <h5 class="text-primary">{{ formattedDate }}</h5>
+        </div>
+    </div>
+    {% for image in images %}
+        <div class="row">
+            <div class="col-xs-12">
+                <a href="{{ path('image', {name: image.name}) }}"><img
+                            src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}"
+                            class="img-rounded wallpaper"></a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 para-of-date">
+                {% for archive in image.archives %}
+                    <a href="{{ path('archive', {market: archive.market, date: archive.date}) }}"><img
+                                src="{{ attribute(flags, archive.market) }}"
+                                alt="{{ ('markets.' ~ archive.market) | trans }} ({{ formattedDate }}): {{ archive.info }}"
+                                class="flag-of-date"></a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row">
+
+        <div class="col-xs-6 pgr">
+            <a href="{{ path('date', {date: date.previous}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
+                <i class="fui-arrow-left"></i>
+            </a>
+        </div>
+
+        <div class="col-xs-6 pgr">
+            {% if date.old %}
+                <a href="{{ path('date', {date: date.next}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
+                    <i class="fui-arrow-right"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-embossed btn-default btn-lg btn-block" disabled="disabled">
+                    <i class="fui-arrow-right"></i>
+                </button>
+            {% endif %}
+        </div>
+
+    </div>
+{% endblock %}
