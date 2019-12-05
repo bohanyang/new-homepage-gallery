@@ -37,12 +37,14 @@ class SettingsController extends AbstractController
 
             if ($referrer !== null) {
                 $referrer = UriString::parse($referrer);
-                unset($referrer['scheme']);
-                unset($referrer['user']);
-                unset($referrer['pass']);
-                unset($referrer['host']);
-                unset($referrer['port']);
-                unset($referrer['fragment']);
+                unset(
+                    $referrer['scheme'],
+                    $referrer['user'],
+                    $referrer['pass'],
+                    $referrer['host'],
+                    $referrer['port'],
+                    $referrer['fragment']
+                );
                 $redirectTo = UriString::build($referrer);
             }
 
