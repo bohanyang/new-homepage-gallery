@@ -111,7 +111,7 @@ final class GalleryController extends AbstractController
         );
     }
 
-    public function browse(int $page)
+    public function browse(string $page)
     {
         $limit = 15;
         try {
@@ -120,7 +120,7 @@ final class GalleryController extends AbstractController
                 function (ItemInterface $item) use ($limit, $page) {
                     $this->expiresAt($item);
 
-                    return $this->repository->listImages($limit, $page);
+                    return $this->repository->listImages($limit, (int) $page);
                 }
             );
         } catch (InvalidArgumentException $e) {
@@ -177,14 +177,8 @@ final class GalleryController extends AbstractController
         if ($date === '') {
             $now = new DateTimeImmutable('now', $this->tz);
             $todayPublishTime = new DateTimeImmutable(self::PUBLISH_TIME, $this->tz);
-            $isTodayPublished = $now > $todayPublishTime;
-
-            if ($isTodayPublished) {
-                $date = $now;
-            } else {
-                $date = new DateTimeImmutable('yesterday', $this->tz);
-            }
-
+            $todayIsPublished = $now > $todayPublishTime;
+            $date = $todayIsPublished ? $now : new DateTimeImmutable('yesterday', $this->tz);
             $date = $date->format(self::DATE_STRING_FORMAT);
         }
 
@@ -221,7 +215,7 @@ final class GalleryController extends AbstractController
 
     private function expiresAt(ItemInterface $item)
     {
-        $now = new DateTimeImmutable(null, $this->tz);
+        $now = new DateTimeImmutable('now', $this->tz);
         $expiresAt = new DateTimeImmutable(self::EXPIRE_TIME, $this->tz);
 
         if ($expiresAt < $now) {
@@ -264,13 +258,8 @@ final class GalleryController extends AbstractController
             return '';
         }
 
-        $url = UriString::parse($image['vid']['sources'][1][2]);
-        $origin = UriString::parse($this->params['video_origin']);
-        $url['scheme'] = $origin['scheme'];
-        $url['user'] = $origin['user'];
-        $url['pass'] = $origin['pass'];
-        $url['host'] = $origin['host'];
-        $url['path'] = $origin['path'] . $url['path'];
+        $url = UriString::parse($this->params['video_origin']);
+        $url['path'] .= UriString::parse($image['vid']['sources'][1][2])['path'];
 
         return UriString::build($url);
     }
