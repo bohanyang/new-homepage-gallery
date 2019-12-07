@@ -114,6 +114,7 @@ final class GalleryController extends AbstractController
     public function browse(string $page)
     {
         $limit = 15;
+
         try {
             $results = $this->cache->get(
                 "browse.$page",
