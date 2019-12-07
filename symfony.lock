@@ -14,14 +14,23 @@
             "./config/packages/dev/easy_log_handler.yaml"
         ]
     },
+    "ipip/db": {
+        "version": "v1.0.0"
+    },
     "league/uri": {
         "version": "6.0.1"
+    },
+    "league/uri-components": {
+        "version": "2.0.1"
     },
     "league/uri-interfaces": {
         "version": "2.0.0"
     },
     "leancloud/leancloud-sdk": {
         "version": "v0.10.3"
+    },
+    "maxmind-db/reader": {
+        "version": "v1.5.0"
     },
     "monolog/monolog": {
         "version": "1.25.2"
@@ -30,7 +39,7 @@
         "version": "v4.3.0"
     },
     "php": {
-        "version": "7.3"
+        "version": "7.2"
     },
     "psr/cache": {
         "version": "1.0.1"
