@@ -56,7 +56,7 @@ services:
 
     MaxMind\Db\Reader:
         arguments:
-            - '%kernel.project_dir%/share/GeoLite2-City.mmdb'
+            - '%kernel.project_dir%/share/GeoLite2-Country.mmdb'
 
     App\GeoIP\IpVersionSplitter:
         arguments:
