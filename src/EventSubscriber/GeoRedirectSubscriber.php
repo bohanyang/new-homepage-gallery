@@ -21,11 +21,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 final class GeoRedirectSubscriber implements EventSubscriberInterface
 {
-    private const NO_REDIRECT_COOKIE = '_dzdh4rjy6d';
+    private const NO_REDIRECT_COOKIE = '_f0ca47';
 
     private const QUERY_PARAM = '_settings';
 
-    private const MAX_AGE = 157680000;
+    private const MAX_AGE = 604800;
 
     /** @var CookieBuffer */
     private $cookieBuffer;
