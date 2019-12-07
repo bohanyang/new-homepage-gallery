@@ -10,6 +10,7 @@ use League\Uri\Components\Query;
 use League\Uri\QueryString;
 use League\Uri\Uri;
 use League\Uri\UriString;
+use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -18,8 +19,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
-final class GeoRedirectSubscriber implements EventSubscriberInterface
+final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSubscriberInterface
 {
     private const NO_REDIRECT_COOKIE = '_f0ca47';
 
@@ -33,20 +35,20 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface
     /** @var Settings */
     private $settings;
 
-    /** @var CheckerInterface */
-    private $checker;
+    /** @var ContainerInterface */
+    private $container;
 
     private $destination;
 
     public function __construct(
         CookieBuffer $cookieBuffer,
         Settings $settings,
-        CheckerInterface $checker,
+        ContainerInterface $container,
         ContainerBagInterface $params
     ) {
         $this->cookieBuffer = $cookieBuffer;
         $this->settings = $settings;
-        $this->checker = $checker;
+        $this->container = $container;
         $this->destination = $params->has('geo_redirect.destination') ?
             $params->get('geo_redirect.destination') :
             null;
@@ -75,7 +77,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (!$this->checker->isCN($ip)) {
+        if (!$this->container->get('checker')->isCN($ip)) {
             $this->cookieBuffer->send(
                 new Cookie(
                     self::NO_REDIRECT_COOKIE,
@@ -177,5 +179,12 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface
         }
 
         return $data;
+    }
+
+    public static function getSubscribedServices()
+    {
+        return [
+            'checker' => CheckerInterface::class
+        ];
     }
 }
