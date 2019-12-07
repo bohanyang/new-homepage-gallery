@@ -6,22 +6,22 @@ use Symfony\Component\HttpFoundation\Cookie;
 
 use function time;
 
-class Settings
+final class Settings
 {
-    public const COOKIES = [
-        'imageSize' => 'image',
-        'thumbnailSize' => 'imagepreview'
+    private const COOKIES = [
+        'image',
+        'imagepreview'
     ];
 
-    public const DEFAULTS = [
-        'imageSize' => '1366x768',
-        'thumbnailSize' => '800x480'
+    private const DEFAULTS = [
+        '1366x768',
+        '800x480'
     ];
 
-    /**
-     * @var CookieBuffer
-     */
-    protected $cookieBuffer;
+    private const MAX_AGE = 157680000;
+
+    /** @var CookieBuffer */
+    private $cookieBuffer;
 
     public function __construct(CookieBuffer $cookieBuffer)
     {
@@ -30,33 +30,54 @@ class Settings
 
     public function getImageSize()
     {
-        return $this->get('imageSize');
+        return $this->get(0);
     }
 
     public function setImageSize(string $value)
     {
-        $this->set('imageSize', $value);
+        $this->set(0, $value);
     }
 
     public function getThumbnailSize()
     {
-        return $this->get('thumbnailSize');
+        return $this->get(1);
     }
 
     public function setThumbnailSize(string $value)
     {
-        $this->set('thumbnailSize', $value);
+        $this->set(1, $value);
     }
 
-    protected function get(string $key)
+    private function get(string $key)
     {
-        return $this->cookieBuffer->read(static::COOKIES[$key], static::DEFAULTS[$key]);
+        return $this->cookieBuffer->read(self::COOKIES[$key], self::DEFAULTS[$key]);
     }
 
-    protected function set(string $key, $value)
+    private function set(string $key, $value)
     {
-        $expire = time() + 3600 * 24 * 365 * 5;
+        $this->cookieBuffer->send(new Cookie(self::COOKIES[$key], $value, time() + self::MAX_AGE));
+    }
 
-        $this->cookieBuffer->send(new Cookie(static::COOKIES[$key], $value, $expire));
+    public function export()
+    {
+        $results = [];
+
+        foreach (self::COOKIES as $key => $cookie) {
+            $value = $this->cookieBuffer->read($cookie);
+            if ($value !== null) {
+                $results[$key] = $value;
+            }
+        }
+
+        return $results;
+    }
+
+    public function import(array $results)
+    {
+        foreach ($results as $key => $value) {
+            if (isset(self::COOKIES[$key])) {
+                $this->set($key, $value);
+            }
+        }
     }
 }
