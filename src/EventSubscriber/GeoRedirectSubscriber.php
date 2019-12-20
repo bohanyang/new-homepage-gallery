@@ -7,9 +7,8 @@ use App\GeoIP\CheckerInterface;
 use App\Settings;
 use InvalidArgumentException;
 use League\Uri\Components\Query;
-use League\Uri\QueryString;
 use League\Uri\Uri;
-use League\Uri\UriString;
+use League\Uri\UriModifier;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -120,11 +119,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSu
             );
 
             $uri = Uri::createFromString($request->getUri());
-            $uri = $uri->withQuery(
-                Query::createFromUri($uri)
-                    ->withoutPair(self::QUERY_PARAM)
-                    ->getContent()
-            )->__toString();
+            $uri = UriModifier::removePairs($uri, self::QUERY_PARAM)->__toString();
 
             $event->setResponse(
                 new RedirectResponse(

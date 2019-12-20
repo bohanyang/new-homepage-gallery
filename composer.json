@@ -8,7 +8,7 @@
         "ext-json": "*",
         "ipip/db": "^1.0",
         "league/uri": "^6.0",
-        "league/uri-components": "^2.0",
+        "league/uri-components": "^2.1",
         "leancloud/leancloud-sdk": "^0.10.3",
         "maxmind-db/reader": "^1.5",
         "symfony/console": "*",
