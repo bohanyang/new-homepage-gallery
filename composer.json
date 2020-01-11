@@ -3,6 +3,7 @@
     "license": "proprietary",
     "require": {
         "php": "~7.3.11",
+        "ext-apcu": "*",
         "ext-blackfire": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
@@ -36,7 +37,7 @@
         "sort-packages": true,
         "platform": {
             "php": "7.3.11",
-            "ext-blackfire": "1.27.1"
+            "ext-blackfire": "1.29.4"
         }
     },
     "autoload": {
