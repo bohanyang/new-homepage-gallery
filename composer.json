@@ -2,7 +2,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "~7.2.5",
+        "php": "~7.3.11",
         "ext-blackfire": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
@@ -10,7 +10,7 @@
         "ext-json": "*",
         "ipip/db": "^1.0",
         "league/uri": "^6.0",
-        "league/uri-components": "^2.0",
+        "league/uri-components": "^2.1",
         "leancloud/leancloud-sdk": "^0.10.3",
         "maxmind-db/reader": "^1.5",
         "symfony/console": "*",
@@ -33,7 +33,11 @@
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "7.3.11",
+            "ext-blackfire": "1.27.1"
+        }
     },
     "autoload": {
         "psr-4": {
