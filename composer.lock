@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8f3366e338e0f62d4bf7d445c86c2c53",
+    "content-hash": "2f6e7d388b352aae1c0f7974ec8c1f5c",
     "packages": [
         {
             "name": "ipip/db",
@@ -3937,9 +3937,5 @@
         "ext-intl": "*",
         "ext-json": "*"
     },
-    "platform-dev": [],
-    "platform-overrides": {
-        "php": "7.3.11",
-        "ext-blackfire": "1.29.4"
-    }
+    "platform-dev": []
 }

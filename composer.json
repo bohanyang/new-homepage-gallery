@@ -34,11 +34,7 @@
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true,
-        "platform": {
-            "php": "7.3.11",
-            "ext-blackfire": "1.29.4"
-        }
+        "sort-packages": true
     },
     "autoload": {
         "psr-4": {
