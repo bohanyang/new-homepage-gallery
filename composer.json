@@ -2,7 +2,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "~7.3.11",
+        "php": "~7.4.2",
         "ext-apcu": "*",
         "ext-blackfire": "*",
         "ext-ctype": "*",
