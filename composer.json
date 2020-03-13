@@ -6,7 +6,6 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-json": "*",
-        "doctrine/dbal": "^2.10",
         "ipip/db": "^1.0",
         "league/uri": "^6.0",
         "league/uri-components": "^2.1",

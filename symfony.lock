@@ -81,6 +81,9 @@
     "symfony/orm-pack": {
         "version": "v1.0.8"
     },
+    "symfony/polyfill-intl-messageformatter": {
+        "version": "v1.14.0"
+    },
     "zendframework/zend-code": {
         "version": "3.4.1"
     },
