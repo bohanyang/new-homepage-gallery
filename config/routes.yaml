@@ -92,3 +92,10 @@ settings_legacy:
         permanent: true
         keepQueryParams: false
     methods: GET|HEAD
+
+prune:
+    path: /prune/{token}/
+    controller: App\Controller\CachePruningController::index
+    requirements:
+        token: '\d{6}'
+    methods: GET
