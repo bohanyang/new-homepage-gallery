@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use DateTimeInterface;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use LeanCloud\Client;
 use LeanCloud\LeanObject;
@@ -55,16 +55,16 @@ class LeanCloudRepository implements RepositoryContract
         $innerQuery->equalTo('name', $name);
 
         $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query
+        $results = $query
             ->matchesInQuery('image', $innerQuery)
             ->addDescend('date')
             ->addDescend('market')
-            ->_include('image');
-
-        $results = $query->find();
+            ->_include('image')
+            ->find()
+        ;
 
         if ($results === []) {
-            throw new NotFoundException('Image not found.');
+            throw new NotFoundException('Image not found');
         }
 
         $image = [];
@@ -97,20 +97,25 @@ class LeanCloudRepository implements RepositoryContract
         $skip = $limit * ($page - 1);
 
         $query = new Query(self::IMAGE_CLASS_NAME);
-        $query
+        $results = $query
             ->limit($limit)
             ->skip($skip)
-            ->addDescend('createdAt');
+            ->addDescend('createdAt')
+            ->find()
+        ;
+
+        if ($results === []) {
+            throw new NotFoundException('No images found');
+        }
 
         return array_map(
             function (LeanObject $object) {
                 return $object->toJSON();
-            },
-            $query->find()
+            }, $results
         );
     }
 
-    public function getArchive(string $market, DateTimeInterface $date)
+    public function getArchive(string $market, DateTimeImmutable $date)
     {
         $query = new Query(self::ARCHIVE_CLASS_NAME);
 
@@ -122,13 +127,13 @@ class LeanCloudRepository implements RepositoryContract
         $result = $query->first();
 
         if ($result === null) {
-            throw new NotFoundException('Archive not found.');
+            throw new NotFoundException('Archive not found');
         }
 
         return $result->toJSON();
     }
 
-    public function getArchivesByDate(DateTimeInterface $date)
+    public function findArchivesByDate(DateTimeImmutable $date)
     {
         $query = new Query(self::ARCHIVE_CLASS_NAME);
 
@@ -140,7 +145,7 @@ class LeanCloudRepository implements RepositoryContract
         $results = $query->find();
 
         if ($results === []) {
-            throw new NotFoundException('No archives found.');
+            throw new NotFoundException('No archives found');
         }
 
         $images = [];

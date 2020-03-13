@@ -65,3 +65,7 @@ services:
 
     App\GeoIP\CheckerInterface:
         alias: 'App\GeoIP\IpVersionSplitter'
+
+    OTPHP\TOTPInterface:
+        factory: ['OTPHP\TOTP', 'create']
+        arguments: ['%env(TOTP_SECRET)%']

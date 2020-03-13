@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use DateTimeInterface;
+use DateTimeImmutable;
 
 interface RepositoryContract
 {
@@ -10,7 +10,7 @@ interface RepositoryContract
 
     public function listImages(int $limit, int $page);
 
-    public function getArchive(string $market, DateTimeInterface $date);
+    public function getArchive(string $market, DateTimeImmutable $date);
 
-    public function getArchivesByDate(DateTimeInterface $date);
+    public function findArchivesByDate(DateTimeImmutable $date);
 }
