@@ -94,8 +94,16 @@ settings_legacy:
     methods: GET|HEAD
 
 prune:
-    path: /prune/{token}/
+    path: /_cache/prune/{token}/
     controller: App\Controller\CachePruningController::index
     requirements:
         token: '\d{6}'
     methods: GET
+
+clear:
+    path: /_cache/clear/{token}/
+    controller: App\Controller\CachePruningController::clear
+    requirements:
+        token: '\d{6}'
+    methods: GET
+
