@@ -2,14 +2,16 @@
 
 namespace App\Repository;
 
-use DateTimeInterface;
-use InvalidArgumentException;
+use DateTimeImmutable;
+use DateTimeZone;
 use LeanCloud\Client;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
 
 class LeanCloudRepository implements RepositoryContract
 {
+    use RepositoryTrait;
+
     private const IMAGE_CLASS_NAME = 'Image';
     private const ARCHIVE_CLASS_NAME = 'Archive';
 
@@ -55,22 +57,22 @@ class LeanCloudRepository implements RepositoryContract
         $innerQuery->equalTo('name', $name);
 
         $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query
+        $results = $query
             ->matchesInQuery('image', $innerQuery)
             ->addDescend('date')
             ->addDescend('market')
-            ->_include('image');
-
-        $results = $query->find();
+            ->_include('image')
+            ->find()
+        ;
 
         if ($results === []) {
-            throw new NotFoundException('Image not found.');
+            throw new NotFoundException('Image not found');
         }
 
         $image = [];
 
         foreach ($results as $result) {
-            $result = $result->toJSON();
+            $result = self::transform($result);
 
             if ($image === []) {
                 $image = $result['image'];
@@ -86,31 +88,28 @@ class LeanCloudRepository implements RepositoryContract
 
     public function listImages(int $limit, int $page)
     {
-        if ($limit < 1) {
-            throw new InvalidArgumentException('The limit should be an integer greater than or equal to 1.');
-        }
-
-        if ($page < 1) {
-            throw new InvalidArgumentException('The page number should be an integer greater than or equal to 1.');
-        }
-
-        $skip = $limit * ($page - 1);
+        $skip = $this->getSkip($limit, $page);
 
         $query = new Query(self::IMAGE_CLASS_NAME);
-        $query
+        $results = $query
             ->limit($limit)
             ->skip($skip)
-            ->addDescend('createdAt');
+            ->addDescend('createdAt')
+            ->find()
+        ;
+
+        if ($results === []) {
+            throw new NotFoundException('No images found');
+        }
 
         return array_map(
             function (LeanObject $object) {
                 return $object->toJSON();
-            },
-            $query->find()
+            }, $results
         );
     }
 
-    public function getArchive(string $market, DateTimeInterface $date)
+    public function getArchive(string $market, DateTimeImmutable $date)
     {
         $query = new Query(self::ARCHIVE_CLASS_NAME);
 
@@ -122,13 +121,13 @@ class LeanCloudRepository implements RepositoryContract
         $result = $query->first();
 
         if ($result === null) {
-            throw new NotFoundException('Archive not found.');
+            throw new NotFoundException('Archive not found');
         }
 
-        return $result->toJSON();
+        return self::transform($result);
     }
 
-    public function getArchivesByDate(DateTimeInterface $date)
+    public function findArchivesByDate(DateTimeImmutable $date)
     {
         $query = new Query(self::ARCHIVE_CLASS_NAME);
 
@@ -140,13 +139,13 @@ class LeanCloudRepository implements RepositoryContract
         $results = $query->find();
 
         if ($results === []) {
-            throw new NotFoundException('No archives found.');
+            throw new NotFoundException('No archives found');
         }
 
         $images = [];
 
         foreach ($results as $result) {
-            $result = $result->toJSON();
+            $result = self::transform($result);
             $imageId = $result['image']['objectId'];
 
             if (!isset($images[$imageId])) {
@@ -159,5 +158,35 @@ class LeanCloudRepository implements RepositoryContract
         }
 
         return $images;
+    }
+
+    private static function arrayReplaceKeys($arr, $keyMap)
+    {
+        $result = [];
+        foreach ($arr as $key => $val) {
+            $key = $keyMap[$key] ?? $key;
+            $result[$key] = $val;
+        }
+        return $result;
+    }
+
+    private const FIELD_NAMES = [
+        'archives' => [
+            'info' => 'description',
+            'hs' => 'hotspots',
+            'msg' => 'messages',
+            'cs' => 'coverstory'
+        ]
+    ];
+
+    private static function transform(LeanObject $result)
+    {
+        $archive = self::arrayReplaceKeys($result->toJSON(), self::FIELD_NAMES['archives']);
+        $archive['date'] = DateTimeImmutable::createFromFormat(
+            'YmdHis',
+            "{$archive['date']}000000",
+            new DateTimeZone('UTC')
+        );
+        return $archive;
     }
 }

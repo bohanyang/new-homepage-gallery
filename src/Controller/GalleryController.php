@@ -106,7 +106,8 @@ final class GalleryController extends AbstractController
                 'mirror' => $this->params['image_origin'],
                 'video' => $this->getVideoUrl($result),
                 'res' => $this->settings->getImageSize(),
-                'flags' => self::FLAGS
+                'flags' => self::FLAGS,
+                'dateStringFormat' => self::DATE_STRING_FORMAT
             ]
         );
     }
@@ -150,7 +151,7 @@ final class GalleryController extends AbstractController
                 function (ItemInterface $item) use ($dateInfo) {
                     $this->expiresAt($item);
 
-                    return $this->repository->getArchivesByDate($dateInfo['object']);
+                    return $this->repository->findArchivesByDate($dateInfo['object']);
                 }
             );
         } catch (NotFoundException $e) {
@@ -237,7 +238,7 @@ final class GalleryController extends AbstractController
         $date = $date->modify(self::PUBLISH_TIME);
         $previous = $date->modify('-1 day')->format(self::DATE_STRING_FORMAT);
         $now = new DateTimeImmutable('now', $this->tz);
-        $old = (int) $now->diff($date, false)->format('%r%a') < 0;
+        $old = ((int) $now->diff($date, false)->format('%r%a')) < 0;
         $return = [
             'object' => $date,
             'old' => $old,
@@ -256,7 +257,7 @@ final class GalleryController extends AbstractController
     private function getVideoUrl($image)
     {
         if (empty($image['vid']['sources'][1][2])) {
-            return '';
+            return null;
         }
 
         $url = UriString::parse($this->params['video_origin']);
