@@ -11,27 +11,32 @@
                 <ul>
                     <li>
                         {% if image.wp %}
-                            <a href="{{ mirror }}{{ image.urlbase }}_1920x1200.jpg"
-                               target="_blank">{{ 'image_sizes.1920x1200'|trans }}</a>
+                            <a href="{{ mirror }}{{ image.urlbase }}_1920x1200.jpg" target="_blank">
+                                {{ 'image_sizes.1920x1200'|trans }}
+                            </a>
                         {% else %}
                             <strong>{{ 'not_available'|trans }}</strong>
                         {% endif %}
                     </li>
                     <li>
-                        <a href="{{ mirror }}{{ image.urlbase }}_1920x1080.jpg"
-                           target="_blank">{{ 'image_sizes.1920x1080'|trans }}</a>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1920x1080.jpg" target="_blank">
+                            {{ 'image_sizes.1920x1080'|trans }}
+                        </a>
                     </li>
                     <li>
-                        <a href="{{ mirror }}{{ image.urlbase }}_1080x1920.jpg"
-                           target="_blank">{{ 'image_sizes.1080x1920'|trans }}</a>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1080x1920.jpg" target="_blank">
+                            {{ 'image_sizes.1080x1920'|trans }}
+                        </a>
                     </li>
                     <li>
-                        <a href="{{ mirror }}{{ image.urlbase }}_1366x768.jpg"
-                           target="_blank">{{ 'image_sizes.1366x768'|trans }}</a>
+                        <a href="{{ mirror }}{{ image.urlbase }}_1366x768.jpg" target="_blank">
+                            {{ 'image_sizes.1366x768'|trans }}
+                        </a>
                     </li>
                     <li>
-                        <a href="{{ mirror }}{{ image.urlbase }}_768x1280.jpg"
-                           target="_blank">{{ 'image_sizes.768x1280'|trans }}</a>
+                        <a href="{{ mirror }}{{ image.urlbase }}_768x1280.jpg" target="_blank">
+                            {{ 'image_sizes.768x1280'|trans }}
+                        </a>
                     </li>
                 </ul>
                 <small class="text-muted">&copy; {{ image.copyright }}</small>

@@ -1,21 +1,21 @@
 {% extends "base.html.twig" %}
 
-{% set formattedDate = date.object|date('Y/m/d') %}
+{% set formattedDate = date.object|date('Y/n/j') %}
 
-{% block title %}{{ archive.info }}{% endblock %}
+{% block title %}{{ archive.description }}{% endblock %}
 
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
             <a href="{{ path('image', {name: image.name}) }}"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
-                                                                   alt="{{ archive.info }}"
+                                                                   alt="{{ archive.description }}"
                                                                    class="img-rounded wallpaper"></a>
         </div>
         <div class="col-xs-12">
             <button type="button" class="btn btn-link btn-block" data-toggle="modal"
                     data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
-        {% if video is not empty %}
+        {% if video is not null %}
             <div class="col-xs-12">
                 <a class="btn btn-link btn-block" href="{{ video }}" target="_blank">
                     <strong>{{ 'play_video'|trans }}</strong>
@@ -50,12 +50,12 @@
     </div>
     {% if archive.cs is defined %}
         <div class="row">
-            <div class="col-xs-12 story">
+            <div class="col-xs-12 story" lang="{{ archive.market }}">
                 <blockquote>
                     <p>
-                        <strong>{{ archive.cs.attribute }}: {{ archive.cs.title }}</strong>
+                        <strong>{{ archive.coverstory.attribute }}: {{ archive.coverstory.title }}</strong>
                     </p>
-                    <p>{{ archive.cs.para1 }}</p>
+                    <p>{{ archive.coverstory.para1 }}</p>
                 </blockquote>
             </div>
         </div>
@@ -65,27 +65,41 @@
             <table class="table table-striped">
                 <tr>
                     <td>
-                        <a href="{{ archive.link }}" target="_blank" rel="nofollow">
-                            <strong>{{ archive.info }}</strong>
-                        </a>
+                        <span lang="{{ archive.market }}">
+                            {% if archive.link is defined %}
+                                <a href="{{ archive.link }}" target="_blank" rel="nofollow">
+                                    <strong>{{ archive.description }}</strong>
+                                </a>
+                            {% else %}
+                                <span class="text-link"><strong>{{ archive.description }}</strong></span>
+                            {% endif %}
+                        </span>
                     </td>
                 </tr>
-                {% if archive.msg is defined %}
-                    {% for message in archive.msg %}
+                {% if archive.hotspots is defined %}
+                    {% for hotspot in archive.hotspots %}
                         <tr>
-                            <td>{{ message.title }} <a href="{{ message.link }}" target="_blank" rel="nofollow">
-                                    <strong>{{ message.text }}</strong>
-                                </a>
+                            <td>
+                                <span lang="{{ archive.market }}">
+                                    {{ hotspot.desc }}
+                                    <a href="{{ hotspot.link }}" target="_blank" rel="nofollow">
+                                        <strong>{{ hotspot.query }}</strong>
+                                    </a>
+                                </span>
                             </td>
                         </tr>
                     {% endfor %}
                 {% endif %}
-                {% if archive.hs is defined %}
-                    {% for hotspot in archive.hs %}
+                {% if archive.messages is defined %}
+                    {% for message in archive.messages %}
                         <tr>
-                            <td>{{ hotspot.desc }} <a href="{{ hotspot.link }}" target="_blank" rel="nofollow">
-                                    <strong>{{ hotspot.query }}</strong>
-                                </a>
+                            <td>
+                                <span lang="{{ archive.market }}">
+                                    {{ message.title }}
+                                    <a href="{{ message.link }}" target="_blank" rel="nofollow">
+                                        <strong>{{ message.text }}</strong>
+                                    </a>
+                                </span>
                             </td>
                         </tr>
                     {% endfor %}
