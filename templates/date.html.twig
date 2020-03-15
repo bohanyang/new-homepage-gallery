@@ -1,6 +1,6 @@
 {% extends "base.html.twig" %}
 
-{% set formattedDate = date.object|date('Y/m/d') %}
+{% set formattedDate = date.object|date('Y/n/j') %}
 
 {% block title %}{{ formattedDate }}{% endblock %}
 
