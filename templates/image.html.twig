@@ -12,7 +12,7 @@
             <button type="button" class="btn btn-link btn-block" data-toggle="modal"
                     data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
-        {% if video is not empty %}
+        {% if video is not null %}
             <div class="col-xs-12">
                 <a class="btn btn-link btn-block" href="{{ video }}" target="_blank">
                     <strong>{{ 'play_video'|trans }}</strong>
@@ -26,15 +26,23 @@
                 {% for archive in image.archives %}
                     <tr>
                         <td>
-                            <a href="{{ path('archive', {market: archive.market, date: archive.date}) }}"><img
-                                        class="flag" src="{{ attribute(flags, archive.market) }}"
-                                        alt="{{ archive.market }}"> {{ archive.date }}</a>
+                            <a href="{{ path('archive', {market: archive.market, date: archive.date|date(dateStringFormat)}) }}">
+                                <img class="flag" src="{{ attribute(flags, archive.market) }}" alt="{{ archive.market }}">
+                                {{ archive.date|date('Y/n/j') }}
+                            </a>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <a href="{{ archive.link }}" target="_blank" rel="nofollow"><span
-                                        lang="{{ archive.market }}">{{ archive.info }}</span></a>
+                            <span lang="{{ archive.market }}">
+                                {% if archive.link is defined %}
+                                    <a href="{{ archive.link }}" target="_blank" rel="nofollow">
+                                        {{ archive.description }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-link">{{ archive.description }}</span>
+                                {% endif %}
+                            </span>
                         </td>
                     </tr>
                 {% endfor %}

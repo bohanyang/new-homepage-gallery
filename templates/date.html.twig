@@ -13,24 +13,22 @@
     {% for image in images %}
         <div class="row">
             <div class="col-xs-12">
-                <a href="{{ path('image', {name: image.name}) }}"><img
-                            src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}"
-                            class="img-rounded wallpaper"></a>
+                <a href="{{ path('image', {name: image.name}) }}">
+                    <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
+                </a>
             </div>
         </div>
         <div class="row">
             <div class="col-xs-12 para-of-date">
                 {% for archive in image.archives %}
-                    <a href="{{ path('archive', {market: archive.market, date: archive.date}) }}"><img
-                                src="{{ attribute(flags, archive.market) }}"
-                                alt="{{ ('markets.' ~ archive.market) | trans }} ({{ formattedDate }}): {{ archive.info }}"
-                                class="flag-of-date"></a>
+                    <a href="{{ path('archive', {market: archive.market, date: date.current}) }}">
+                        <img src="{{ attribute(flags, archive.market) }}" class="flag-of-date">
+                    </a>
                 {% endfor %}
             </div>
         </div>
     {% endfor %}
     <div class="row">
-
         <div class="col-xs-6 pgr">
             <a href="{{ path('date', {date: date.previous}) }}" class="btn btn-embossed btn-primary btn-lg btn-block">
                 <i class="fui-arrow-left"></i>
@@ -48,6 +46,5 @@
                 </button>
             {% endif %}
         </div>
-
     </div>
 {% endblock %}
