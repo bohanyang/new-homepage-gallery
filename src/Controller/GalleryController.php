@@ -106,7 +106,8 @@ final class GalleryController extends AbstractController
                 'mirror' => $this->params['image_origin'],
                 'video' => $this->getVideoUrl($result),
                 'res' => $this->settings->getImageSize(),
-                'flags' => self::FLAGS
+                'flags' => self::FLAGS,
+                'dateStringFormat' => self::DATE_STRING_FORMAT
             ]
         );
     }
@@ -150,7 +151,7 @@ final class GalleryController extends AbstractController
                 function (ItemInterface $item) use ($dateInfo) {
                     $this->expiresAt($item);
 
-                    return $this->repository->getArchivesByDate($dateInfo['object']);
+                    return $this->repository->findArchivesByDate($dateInfo['object']);
                 }
             );
         } catch (NotFoundException $e) {

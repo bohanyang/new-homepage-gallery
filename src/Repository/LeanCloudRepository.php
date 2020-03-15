@@ -3,13 +3,14 @@
 namespace App\Repository;
 
 use DateTimeImmutable;
-use InvalidArgumentException;
 use LeanCloud\Client;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
 
 class LeanCloudRepository implements RepositoryContract
 {
+    use RepositoryTrait;
+
     private const IMAGE_CLASS_NAME = 'Image';
     private const ARCHIVE_CLASS_NAME = 'Archive';
 
@@ -86,15 +87,7 @@ class LeanCloudRepository implements RepositoryContract
 
     public function listImages(int $limit, int $page)
     {
-        if ($limit < 1) {
-            throw new InvalidArgumentException('The limit should be an integer greater than or equal to 1.');
-        }
-
-        if ($page < 1) {
-            throw new InvalidArgumentException('The page number should be an integer greater than or equal to 1.');
-        }
-
-        $skip = $limit * ($page - 1);
+        $skip = $this->getSkip($limit, $page);
 
         $query = new Query(self::IMAGE_CLASS_NAME);
         $results = $query
