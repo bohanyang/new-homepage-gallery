@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use LeanCloud\Client;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
@@ -71,7 +72,7 @@ class LeanCloudRepository implements RepositoryContract
         $image = [];
 
         foreach ($results as $result) {
-            $result = $result->toJSON();
+            $result = self::transform($result);
 
             if ($image === []) {
                 $image = $result['image'];
@@ -123,7 +124,7 @@ class LeanCloudRepository implements RepositoryContract
             throw new NotFoundException('Archive not found');
         }
 
-        return $result->toJSON();
+        return self::transform($result);
     }
 
     public function findArchivesByDate(DateTimeImmutable $date)
@@ -144,7 +145,7 @@ class LeanCloudRepository implements RepositoryContract
         $images = [];
 
         foreach ($results as $result) {
-            $result = $result->toJSON();
+            $result = self::transform($result);
             $imageId = $result['image']['objectId'];
 
             if (!isset($images[$imageId])) {
@@ -157,5 +158,35 @@ class LeanCloudRepository implements RepositoryContract
         }
 
         return $images;
+    }
+
+    private static function arrayReplaceKeys($arr, $keyMap)
+    {
+        $result = [];
+        foreach ($arr as $key => $val) {
+            $key = $keyMap[$key] ?? $key;
+            $result[$key] = $val;
+        }
+        return $result;
+    }
+
+    private const FIELD_NAMES = [
+        'archives' => [
+            'info' => 'description',
+            'hs' => 'hotspots',
+            'msg' => 'messages',
+            'cs' => 'coverstory'
+        ]
+    ];
+
+    private static function transform(LeanObject $result)
+    {
+        $archive = self::arrayReplaceKeys($result->toJSON(), self::FIELD_NAMES['archives']);
+        $archive['date'] = DateTimeImmutable::createFromFormat(
+            'YmdHis',
+            "{$archive['date']}000000",
+            new DateTimeZone('UTC')
+        );
+        return $archive;
     }
 }
