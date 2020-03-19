@@ -47,7 +47,9 @@ class CookieBufferSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            KernelEvents::REQUEST => 'onKernelRequest',
+            KernelEvents::REQUEST => [
+                ['onKernelRequest', -1]
+            ],
             KernelEvents::RESPONSE => 'onKernelResponse'
         ];
     }
