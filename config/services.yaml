@@ -43,7 +43,7 @@ services:
             - '%env(LEANCLOUD_APP_ID)%'
             - '%env(LEANCLOUD_APP_KEY)%'
             - '%env(LEANCLOUD_APP_MASTER_KEY)%'
-            - ~
+            - true
             - ~
             - '%env(LEANCLOUD_API_SERVER)%'
             - ~
