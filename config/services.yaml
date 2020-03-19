@@ -48,9 +48,9 @@ services:
             - '%env(LEANCLOUD_API_SERVER)%'
             - ~
             - '%env(LEANCLOUD_SESSION_TOKEN)%'
+            - ~
             - '%kernel.environment%'
             - '%kernel.debug%'
-            - ~
 
     ipip\db\Reader:
         arguments:
