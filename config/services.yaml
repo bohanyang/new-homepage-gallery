@@ -5,8 +5,10 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     env(LEANCLOUD_APP_MASTER_KEY): ~
-    env(LEANCLOUD_SESSION_TOKEN): ~
+    env(LEANCLOUD_REGION): ~
     env(LEANCLOUD_API_SERVER): ~
+    env(LEANCLOUD_SESSION_TOKEN): ~
+    env(LEANCLOUD_APP_ENV): ~
     env(APP_IMAGE_ORIGIN): ~
     env(APP_VIDEO_ORIGIN): ~
     env(GEO_REDIRECT_DESTINATION): ~
@@ -44,11 +46,11 @@ services:
             - '%env(LEANCLOUD_APP_KEY)%'
             - '%env(LEANCLOUD_APP_MASTER_KEY)%'
             - ~
-            - ~
+            - '%env(LEANCLOUD_REGION)%'
             - '%env(LEANCLOUD_API_SERVER)%'
             - ~
             - '%env(LEANCLOUD_SESSION_TOKEN)%'
-            - ~
+            - '%env(LEANCLOUD_APP_ENV)%'
             - '%kernel.environment%'
             - '%kernel.debug%'
 
@@ -77,8 +79,16 @@ services:
         factory: ['OTPHP\TOTP', 'create']
         arguments: ['%env(TOTP_SECRET)%']
 
-    BohanYang\BingWallpaper\HomepageImageArchive:
-        class: BohanYang\BingWallpaper\HomepageImageArchive
+    BohanYang\BingWallpaper\Client:
+        class: BohanYang\BingWallpaper\Client
         arguments:
             - 'https://global.bing.com/HPImageArchive.aspx'
             - '@monolog.logger'
+
+#    doctrine_repository.sqlite3:
+#        class: App\Repository\Doctrine\Repository
+#        arguments:
+#            - '@doctrine.dbal.sqlite3_connection'
+#
+#    App\Command\ImportDBCommand:
+#        $sqlite3: '@doctrine_repository.sqlite3'

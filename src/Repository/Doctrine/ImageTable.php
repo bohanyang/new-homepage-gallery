@@ -5,15 +5,19 @@ namespace App\Repository\Doctrine;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
+use function bin2hex;
+use function hex2bin;
+
 class ImageTable extends AbstractTable
 {
-    private const NAME = 'images_t0g3qd54a';
+    private const NAME = 'images';
 
     private const COLUMNS = [
-        'id' => 'integer',
-        //'object_id' => 'binary',
+        //'id' => 'integer',
+        'id' => 'binary',
         'name' => 'string',
-        //'appeared_on' => 'date_immutable',
+        'first_appeared' => 'date_immutable',
+        'last_appeared' => 'date_immutable',
         'urlbase' => 'string',
         'copyright' => 'string',
         'wp' => 'boolean',
@@ -25,24 +29,29 @@ class ImageTable extends AbstractTable
     ];
 
     private const COLUMN_OPTIONS = [
-        'id' => ['autoincrement' => true, 'unsigned' => true],
-        //'object_id' => ['length' => 12, 'fixed' => true, 'customSchemaOptions' => ['unique' => true]],
+        //'id' => ['autoincrement' => true, 'unsigned' => true],
+        //'id' => ['length' => 12, 'fixed' => true, 'customSchemaOptions' => ['unique' => true]],
+        'id' => ['length' => 12, 'fixed' => true],
         'name' => ['length' => 255, 'customSchemaOptions' => ['unique' => true]],
-        //'appeared_on' => ['notnull' => false],
+        'first_appeared' => ['notnull' => false],
+        'last_appeared' => ['notnull' => false],
         'urlbase' => ['length' => 255],
         'copyright' => ['length' => 255],
         'vid' => ['notnull' => false, 'length' => 65535]
     ];
 
     private const QUERY_CALLBACKS = [
+        'id' => 'hex2bin',
         'vid' => 'serialize',
     ];
 
     private const RESULT_CALLBACKS = [
-        'id' => 'convertToPHPValue',
+        //'id' => 'convertToPHPValue',
+        'id' => 'bin2hex',
         'vid' => 'deserialize',
         'wp' => 'convertToPHPValue'
     ];
+
     /** @var AbstractPlatform */
     private $platform;
 
@@ -76,8 +85,18 @@ class ImageTable extends AbstractTable
         return $this->serializer->serialize($data);
     }
 
-    public function deserialize(string $data) : string
+    public function deserialize(string $data)
     {
         return $this->serializer->deserialize($data);
+    }
+
+    public function bin2hex(string $bin) : string
+    {
+        return bin2hex($bin);
+    }
+
+    public function hex2bin(string $hex) : string
+    {
+        return hex2bin($hex);
     }
 }

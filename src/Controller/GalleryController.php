@@ -5,10 +5,10 @@ namespace App\Controller;
 use App\Repository\NotFoundException;
 use App\Repository\RepositoryContract;
 use App\Settings;
-use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use League\Uri\UriString;
+use Safe\DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -230,11 +230,6 @@ final class GalleryController extends AbstractController
     private function getDateStringInfo(string $dateString)
     {
         $date = DateTimeImmutable::createFromFormat(self::DATE_STRING_FORMAT, $dateString, $this->tz);
-
-        if (!$date instanceof DateTimeImmutable) {
-            throw new InvalidArgumentException('Malformed date string');
-        }
-
         $date = $date->modify(self::PUBLISH_TIME);
         $previous = $date->modify('-1 day')->format(self::DATE_STRING_FORMAT);
         $now = new DateTimeImmutable('now', $this->tz);

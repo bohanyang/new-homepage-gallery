@@ -6,16 +6,20 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 use InvalidArgumentException;
 
+use function bin2hex;
+use function hex2bin;
+
 class ArchiveTable extends AbstractTable
 {
-    private const NAME = 'archives_t0g3qd54a';
+    private const NAME = 'archives';
 
     private const COLUMNS = [
-        'id' => 'integer',
+        //'id' => 'integer',
+        'id' => 'binary',
         'market' => 'smallint',
         'date_' => 'date_immutable',
-        'image_id' => 'integer',
-        //'image_object_id' => 'binary',
+        //'image_id' => 'integer',
+        'image_id' => 'binary',
         'description' => 'text',
         'link' => 'string',
         'hotspots' => 'blob',
@@ -31,11 +35,12 @@ class ArchiveTable extends AbstractTable
     ];
 
     private const COLUMN_OPTIONS = [
-        'id' => ['autoincrement' => true, 'unsigned' => true],
+        //'id' => ['autoincrement' => true, 'unsigned' => true],
+        'id' => ['length' => 12, 'fixed' => true],
         'market' => ['unsigned' => true],
         'description' => ['length' => 65535],
-        'image_id' => ['unsigned' => true],
-        //'image_object_id' => ['length' => 12, 'fixed' => true],
+        //'image_id' => ['unsigned' => true],
+        'image_id' => ['length' => 12, 'fixed' => true],
         'link' => ['notnull' => false, 'length' => 2083],
         'hotspots' => ['notnull' => false, 'length' => 65535],
         'messages' => ['notnull' => false, 'length' => 65535],
@@ -43,18 +48,22 @@ class ArchiveTable extends AbstractTable
     ];
 
     private const QUERY_CALLBACKS = [
+        'id' => 'hex2bin',
         'market' => 'convertToMarketId',
+        'image_id' => 'hex2bin',
         'hotspots' => 'serialize',
         'messages' => 'serialize',
         'coverstory' => 'serialize'
     ];
 
     private const RESULT_CALLBACKS = [
-        'id' => 'convertToPHPValue',
+        //'id' => 'convertToPHPValue',
+        'id' => 'bin2hex',
         'date_' => 'convertToPHPValue',
         //'appeared_on' => 'convertToPHPValue',
         'market' => 'convertToMarketName',
-        'image_id' => 'convertToPHPValue',
+        //'image_id' => 'convertToPHPValue',
+        'image_id' => 'bin2hex',
         'hotspots' => 'deserialize',
         'messages' => 'deserialize',
         'coverstory' => 'deserialize'
@@ -103,7 +112,7 @@ class ArchiveTable extends AbstractTable
         return $this->serializer->serialize($data);
     }
 
-    public function deserialize(string $data) : string
+    public function deserialize(string $data)
     {
         return $this->serializer->deserialize($data);
     }
@@ -121,6 +130,7 @@ class ArchiveTable extends AbstractTable
         10 => 'pt-BR',
         11 => 'en-IN',
     ];
+
     private const MARKET_ID_MAPPINGS = [
         'zh-CN' => 1,
         'en-US' => 2,
@@ -158,5 +168,15 @@ class ArchiveTable extends AbstractTable
         }
 
         throw new InvalidArgumentException("Cannot convert market name ${name} to id");
+    }
+
+    public function bin2hex(string $bin) : string
+    {
+        return bin2hex($bin);
+    }
+
+    public function hex2bin(string $hex) : string
+    {
+        return hex2bin($hex);
     }
 }

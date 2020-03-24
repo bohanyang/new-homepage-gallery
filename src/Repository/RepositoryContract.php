@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Repository\RecordBuilder\ImagePointer;
 use DateTimeImmutable;
 
 interface RepositoryContract
@@ -13,4 +14,6 @@ interface RepositoryContract
     public function getArchive(string $market, DateTimeImmutable $date);
 
     public function findArchivesByDate(DateTimeImmutable $date);
+
+    public function findImage(string $name) : ?ImagePointer;
 }

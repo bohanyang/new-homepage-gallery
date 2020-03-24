@@ -70,7 +70,7 @@ class SelectQuery
 
         foreach ($results as $i => $result) {
             foreach ($result as $alias => $value) {
-                if ($value !== null) {
+                if (isset($this->tableMap[$alias]) && $value !== null) {
                     /** @var AbstractTable $table */
                     $table = $this->tableMap[$alias];
                     $column = $this->columnMap[$alias];
@@ -89,7 +89,7 @@ class SelectQuery
 
         foreach ($results as $i => $result) {
             foreach ($result as $alias => $value) {
-                if ($value !== null) {
+                if (isset($this->tableMap[$alias]) && $value !== null) {
                     /** @var AbstractTable $table */
                     $table = $this->tableMap[$alias];
                     $column = $this->columnMap[$alias];

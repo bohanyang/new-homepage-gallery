@@ -3,6 +3,7 @@
 namespace App\Repository\Doctrine;
 
 use App\Repository\NotFoundException;
+use App\Repository\RecordBuilder\ImagePointer;
 use App\Repository\RepositoryContract;
 use App\Repository\RepositoryTrait;
 use DateTimeImmutable;
@@ -14,7 +15,8 @@ use RuntimeException;
 use Throwable;
 use UnexpectedValueException;
 
-use function Safe\sprintf as sprintf;
+use function array_column;
+use function Safe\sprintf;
 
 class Repository implements SchemaProviderInterface, RepositoryContract
 {
@@ -34,6 +36,7 @@ class Repository implements SchemaProviderInterface, RepositoryContract
 
     public function __construct(Connection $conn)
     {
+        //$conn->getConfiguration()->setSQLLogger(null);
         $this->conn = $conn;
         $this->platform = $conn->getDatabasePlatform();
         $serializer = new Serializer();
@@ -74,7 +77,7 @@ class Repository implements SchemaProviderInterface, RepositoryContract
         return $this->conn->lastInsertId();
     }
 
-    public function findImage(string $name)
+    public function findImage2(string $name)
     {
         $query = new SelectQuery($this->conn);
         $imageTable = $query->addTable($this->imageTable, ['id', 'name', 'copyright', 'wp']);
@@ -117,22 +120,19 @@ class Repository implements SchemaProviderInterface, RepositoryContract
         return $this->conn->lastInsertId();
     }
 
-    private function getImageIdOrInsert($image) : string
+    private function getImageId($image) : string
     {
         $result = $this->findImage($image['name']);
 
         if ($result === null) {
             return $this->insertImage($image);
-        } else {
-            if (
-                $image['copyright'] !== $result['copyright'] ||
-                $image['wp'] !== $result['wp']
-            ) {
-                throw new UnexpectedValueException('Image does not match the existing one');
-            }
-
-            return $result['id'];
         }
+
+        if ($image['copyright'] !== $result['copyright'] || $image['wp'] !== $result['wp']) {
+            throw new UnexpectedValueException('Image does not match the existing one');
+        }
+
+        return $image['id'];
     }
 
     public function save(array $data)
@@ -141,7 +141,7 @@ class Repository implements SchemaProviderInterface, RepositoryContract
         $this->conn->beginTransaction();
 
         try {
-            $data['image_id'] = $this->getImageIdOrInsert($data['image']);
+            $data['image_id'] = $this->getImageId($data['image']);
             unset($data['image']);
             $id = $this->saveArchive($data);
         } catch (Throwable $e) {
@@ -255,5 +255,56 @@ class Repository implements SchemaProviderInterface, RepositoryContract
         }
 
         return $images;
+    }
+
+    public function exportImages(int $skip, int $limit)
+    {
+        $query = new SelectQuery($this->conn);
+        $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns());
+        $query
+            ->getBuilder()
+            ->from($imageTable)
+            ->setFirstResult($skip)
+            ->setMaxResults($limit);
+        $results = $query->getData();
+        return array_column($results, $imageTable);
+    }
+
+    public function exportArchives(int $skip, int $limit)
+    {
+        $query = new SelectQuery($this->conn);
+        $archiveTable = $query->addTable($this->archiveTable, $this->archiveTable->getAllColumns());
+        $query
+            ->getBuilder()
+            ->from($archiveTable)
+            ->setFirstResult($skip)
+            ->setMaxResults($limit);
+        $results = $query->getData();
+        return array_column($results, $archiveTable);
+    }
+
+    public function findMarketsHaveArchiveOfDate(DateTimeImmutable $date, array $markets)
+    {
+        $query = new SelectQuery($this->conn);
+        $archiveTable = $query->addTable($this->archiveTable, ['market']);
+        [$date, $dateType] = $this->archiveTable->getQueryParam('date_', $date);
+        [$markets, $marketType] = $this->archiveTable->getArrayParam('market', $markets);
+        $query
+            ->getBuilder()
+            ->from($archiveTable)
+            ->where('date_ = ?', 'market IN (?)')
+            ->setParameters([$date, $markets], [$dateType, $marketType]);
+        $results = [];
+
+        foreach ($query->getResults() as $result) {
+            $results[] = $result[$archiveTable]['market'];
+        }
+
+        return $results;
+    }
+
+    public function findImage(string $name) : ?ImagePointer
+    {
+        // TODO: Implement findImage() method.
     }
 }

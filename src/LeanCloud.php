@@ -13,15 +13,15 @@ final class LeanCloud implements IStorage
     public function __construct(
         string $appId,
         string $appKey,
-        ?string $appMasterKey = null,
-        ?bool $useMasterKey = null,
-        ?string $region = null,
-        ?string $apiServer = null,
-        ?IStorage $storage = null,
-        ?string $sessionToken = null,
-        ?string $appEnv = null,
-        ?string $kernelEnv = null,
-        ?bool $debug = null
+        string $appMasterKey = null,
+        bool $useMasterKey = null,
+        string $region = null,
+        string $apiServer = null,
+        IStorage $storage = null,
+        string $sessionToken = null,
+        string $appEnv = null,
+        string $kernelEnv = null,
+        bool $debug = null
     ) {
         $appMasterKey = $appMasterKey ?? '';
 

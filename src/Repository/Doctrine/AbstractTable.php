@@ -100,7 +100,7 @@ abstract class AbstractTable
         return $this->name;
     }
 
-    protected function getArrayParam(string $column, array $values)
+    public function getArrayParam(string $column, array $values)
     {
         $type = $this->getArrayType($column);
         $values = $this->arrayApplyQueryCallback($column, $values);
