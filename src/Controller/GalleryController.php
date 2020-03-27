@@ -125,8 +125,8 @@ final class GalleryController extends AbstractController
                     return $this->repository->listImages($limit, (int) $page);
                 }
             );
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
+        } catch (NotFoundException $e) {
+            throw $this->createNotFoundException($e->getMessage());
         }
 
         return $this->render(
