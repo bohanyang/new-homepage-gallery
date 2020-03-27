@@ -1,6 +1,7 @@
 /.caddy.*
 /.idea/
 /Caddyfile
+/.leancloud/
 
 ###> symfony/framework-bundle ###
 /.env.local
