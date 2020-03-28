@@ -81,7 +81,7 @@
     "repositories": {
         "0": {
             "type": "path",
-            "url": "../bing-wallpaper",
+            "url": "../bing-wallpaper-git",
             "options": {
                 "symlink": true
             }
