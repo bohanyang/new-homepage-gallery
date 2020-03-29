@@ -4,7 +4,7 @@ namespace App\Repository\Doctrine;
 
 use App\Repository\NotFoundException;
 use App\Repository\RecordBuilder\ImagePointer;
-use App\Repository\RepositoryContract;
+use App\Repository\RepositoryInterface;
 use App\Repository\RepositoryTrait;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -18,7 +18,7 @@ use UnexpectedValueException;
 use function array_column;
 use function Safe\sprintf;
 
-class Repository implements SchemaProviderInterface, RepositoryContract
+class Repository implements SchemaProviderInterface, RepositoryInterface
 {
     use RepositoryTrait;
 
@@ -77,30 +77,10 @@ class Repository implements SchemaProviderInterface, RepositoryContract
         return $this->conn->lastInsertId();
     }
 
-    public function findImage2(string $name)
-    {
-        $query = new SelectQuery($this->conn);
-        $imageTable = $query->addTable($this->imageTable, ['id', 'name', 'copyright', 'wp']);
-        [$name, $type] = $this->imageTable->getQueryParam('name', $name);
-        $query
-            ->getBuilder()
-            ->from($imageTable)
-            ->where('name = ?')
-            ->setMaxResults(1)
-            ->setParameter(0, $name, $type);
-        $results = $query->getResults();
-        if ($results === []) {
-            return null;
-        }
-        return $results[0][$imageTable];
-    }
-
     public function saveArchive($archive)
     {
         [$params, $types, $columns, $placeholders] =
             $this->archiveTable->getSubQueryInsertParams($archive, ['market', 'date_', 'image_id']);
-
-        $placeholders = $this->platform->getDummySelectSQL($placeholders);
 
         $subQuery = $this->conn
             ->createQueryBuilder()

@@ -3,43 +3,62 @@
 namespace App\Repository\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use InvalidArgumentException;
 
+use function implode;
+
 abstract class AbstractTable
 {
     protected const PRIMARY_KEY_INDEX = 'setPrimaryKey';
-    protected const NORMAL_INDEX = 'addIndex';
-    protected const UNIQUE_INDEX = 'addUniqueIndex';
-    protected $name;
-    protected $columns;
-    protected $indexes;
-    protected $columnOptions;
-    protected $queryCallbacks;
-    protected $resultCallbacks;
-    protected $fieldMappings;
-    protected $columnNameMappings;
 
-    protected function __construct(
-        string $name,
-        array $columns,
-        array $indexes = [],
-        array $columnOptions = [],
-        array $queryCallbacks = [],
-        array $resultCallbacks = [],
-        array $fieldMappings = [],
-        array $columnNameMappings = []
-    ) {
-        $this->name = $name;
-        $this->columns = $columns;
-        $this->indexes = $indexes;
-        $this->columnOptions = $columnOptions;
-        $this->queryCallbacks = $queryCallbacks;
-        $this->resultCallbacks = $resultCallbacks;
-        $this->fieldMappings = $fieldMappings;
-        $this->columnNameMappings = $columnNameMappings;
+    protected const NORMAL_INDEX = 'addIndex';
+
+    protected const UNIQUE_INDEX = 'addUniqueIndex';
+
+    /** @var AbstractPlatform */
+    protected $platform;
+
+    /** @var string */
+    protected $name;
+
+    /** @var array */
+    protected $columns;
+
+    /** @var array */
+    protected $indexes = [];
+
+    /** @var array */
+    protected $columnOptions = [];
+
+    /** @var array */
+    protected $queryCallbacks = [];
+
+    /** @var array */
+    protected $resultCallbacks = [];
+
+    /** @var array */
+    protected $fieldMappings = [];
+
+    /** @var array */
+    protected $columnNameMappings = [];
+
+    abstract protected function initialize($params) : void;
+
+    final public function __construct(AbstractPlatform $platform, ...$params)
+    {
+        $this->platform = $platform;
+        $this->name = static::NAME;
+        $this->columns = static::COLUMNS;
+        $this->initialize($params);
+    }
+
+    protected function convertToPHPValue($value, string $type)
+    {
+        return Type::getType($type)->convertToPHPValue($value, $this->platform);
     }
 
     protected function applyQueryCallback(string $column, $value)
@@ -54,7 +73,8 @@ abstract class AbstractTable
     public function applyResultCallback(string $column, $value)
     {
         if (isset($this->resultCallbacks[$column])) {
-            $value = $this->{$this->resultCallbacks[$column]}($value, $column);
+            $type = $this->getColumnType($column);
+            $value = $this->{$this->resultCallbacks[$column]}($value, $type);
         }
 
         return $value;
@@ -165,7 +185,7 @@ abstract class AbstractTable
         }
 
         $columns = implode(', ', $columns);
-        $placeholders = implode(', ', $placeholders);
+        $placeholders = $this->platform->getDummySelectSQL(implode(', ', $placeholders));
 
         foreach ($subQueryColumns as $column) {
             if (!isset($values[$column])) {
@@ -187,13 +207,16 @@ abstract class AbstractTable
     public function addToSchema(Schema $schema) : Table
     {
         $table = $schema->createTable($this->name);
+
         foreach ($this->columns as $column => $type) {
             $options = $this->columnOptions[$column] ?? [];
             $table->addColumn($column, $type, $options);
         }
+
         foreach ($this->indexes as [$index, $columns]) {
             $table->{$index}($columns);
         }
+
         return $table;
     }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Repository\RecordBuilder;
 
-use App\Date;
+use App\NormalizedDate;
 use App\Repository\LeanCloudRepository;
-use App\Repository\RepositoryContract;
+use App\Repository\RepositoryInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
 use LeanCloud\LeanObject;
@@ -15,17 +15,17 @@ abstract class AbstractRecordBuilder
     protected $response;
     /** @var DateTimeImmutable */
     protected $date;
-    /** @var RepositoryContract */
+    /** @var RepositoryInterface */
     protected $repository;
 
-    public function setResponse($response)
+    public function get($response)
     {
         $this->response = $response;
     }
 
     public function getRecord()
     {
-        $this->date = Date::create($this->response['date'])->get();
+        $this->date = NormalizedDate::fromDate($this->response['date'])->get();
         $this->setArchive();
         $this->setImagePointer();
     }

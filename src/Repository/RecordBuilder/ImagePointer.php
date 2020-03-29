@@ -7,8 +7,6 @@ use DateTimeInterface;
 
 interface ImagePointer
 {
-    public function getImage();
-
     public function getWp() : bool;
 
     public function getCopyright() : string;

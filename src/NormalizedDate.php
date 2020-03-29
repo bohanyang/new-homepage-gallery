@@ -3,10 +3,9 @@
 namespace App;
 
 use DateTimeInterface;
-use DateTimeZone;
 use Safe\DateTimeImmutable;
 
-class Date
+class NormalizedDate
 {
     private $date;
 
@@ -14,7 +13,7 @@ class Date
     {
     }
 
-    public static function create(DateTimeInterface $date)
+    public static function fromDate(DateTimeInterface $date)
     {
         $instance = new self();
         $instance->date = DateTimeImmutable::createFromFormat('Y-m-d', "!{$date->format('Y-m-d')}");
@@ -25,7 +24,7 @@ class Date
     public static function fromTimestamp(DateTimeInterface $date)
     {
         $instance = new self();
-        $date = new DateTimeImmutable("@{$date->getTimestamp()}", new DateTimeZone('UTC'));
+        $date = new DateTimeImmutable("@{$date->getTimestamp()}");
         $instance->date = $date->setTime(0, 0, 0);
 
         return $instance;

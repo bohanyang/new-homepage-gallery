@@ -2,10 +2,8 @@
 
 namespace App\Repository;
 
-use App\Date;
 use App\LeanCloud;
 use App\Repository\RecordBuilder\LeanObjectImagePointer;
-use DateTime;
 use Safe\DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
@@ -14,7 +12,7 @@ use LeanCloud\LeanObject;
 use LeanCloud\Query;
 use UnexpectedValueException;
 
-class LeanCloudRepository implements RepositoryContract
+class LeanCloudRepository extends AbstractRepository
 {
     use RepositoryTrait;
 
@@ -247,14 +245,6 @@ class LeanCloudRepository implements RepositoryContract
             $object->set('msg', $data['messages']);
         }
         return $object;
-    }
-
-    public function findImage(string $name) : ?LeanObjectImagePointer
-    {
-        $query = new Query(self::IMAGE_CLASS_NAME);
-        $results = $query->equalTo('name', $name)->limit(1)->find();
-
-        return $results === [] ? null : new LeanObjectImagePointer($results[0]);
     }
 
     private function getImageObject(array $image)

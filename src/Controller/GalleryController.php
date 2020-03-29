@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\NotFoundException;
-use App\Repository\RepositoryContract;
+use App\Repository\RepositoryInterface;
 use App\Settings;
 use DateTimeZone;
 use InvalidArgumentException;
@@ -39,7 +39,7 @@ final class GalleryController extends AbstractController
     /** @var DateTimeZone */
     private $tz;
 
-    /** @var RepositoryContract */
+    /** @var RepositoryInterface */
     private $repository;
 
     /** @var CacheInterface */
@@ -52,7 +52,7 @@ final class GalleryController extends AbstractController
     private $params = [];
 
     public function __construct(
-        RepositoryContract $repository,
+        RepositoryInterface $repository,
         CacheInterface $cache,
         Settings $settings,
         ContainerBagInterface $params

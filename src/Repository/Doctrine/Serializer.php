@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Repository\Doctrine;
-
 
 class Serializer implements SerializerInterface
 {

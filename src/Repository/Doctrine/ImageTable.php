@@ -2,17 +2,14 @@
 
 namespace App\Repository\Doctrine;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Types\Type;
-
-use function bin2hex;
-use function hex2bin;
-
 class ImageTable extends AbstractTable
 {
-    private const NAME = 'images';
+    use HexToBinaryTrait;
+    use SerializeTrait;
 
-    private const COLUMNS = [
+    protected const NAME = 'images';
+
+    protected const COLUMNS = [
         //'id' => 'integer',
         'id' => 'binary',
         'name' => 'string',
@@ -24,11 +21,11 @@ class ImageTable extends AbstractTable
         'vid' => 'blob',
     ];
 
-    private const INDEXES = [
+    protected $indexes = [
         [self::PRIMARY_KEY_INDEX, ['id']]
     ];
 
-    private const COLUMN_OPTIONS = [
+    protected $columnOptions = [
         //'id' => ['autoincrement' => true, 'unsigned' => true],
         //'id' => ['length' => 12, 'fixed' => true, 'customSchemaOptions' => ['unique' => true]],
         'id' => ['length' => 12, 'fixed' => true],
@@ -40,63 +37,20 @@ class ImageTable extends AbstractTable
         'vid' => ['notnull' => false, 'length' => 65535]
     ];
 
-    private const QUERY_CALLBACKS = [
+    protected $queryCallbacks = [
         'id' => 'hex2bin',
         'vid' => 'serialize',
     ];
 
-    private const RESULT_CALLBACKS = [
+    protected $resultCallbacks = [
         //'id' => 'convertToPHPValue',
         'id' => 'bin2hex',
         'vid' => 'deserialize',
         'wp' => 'convertToPHPValue'
     ];
 
-    /** @var AbstractPlatform */
-    private $platform;
-
-    /** @var SerializerInterface */
-    private $serializer;
-
-    public function __construct(AbstractPlatform $platform, SerializerInterface $serializer)
+    protected function initialize($params) : void
     {
-        parent::__construct(
-            self::NAME,
-            self::COLUMNS,
-            self::INDEXES,
-            self::COLUMN_OPTIONS,
-            self::QUERY_CALLBACKS,
-            self::RESULT_CALLBACKS
-        );
-
-        $this->platform = $platform;
-        $this->serializer = $serializer;
-    }
-
-    public function convertToPHPValue($value, string $column)
-    {
-        $type = $this->getColumnType($column);
-
-        return Type::getType($type)->convertToPHPValue($value, $this->platform);
-    }
-
-    public function serialize($data) : string
-    {
-        return $this->serializer->serialize($data);
-    }
-
-    public function deserialize(string $data)
-    {
-        return $this->serializer->deserialize($data);
-    }
-
-    public function bin2hex(string $bin) : string
-    {
-        return bin2hex($bin);
-    }
-
-    public function hex2bin(string $hex) : string
-    {
-        return hex2bin($hex);
+        $this->setSerializer($params[0]);
     }
 }

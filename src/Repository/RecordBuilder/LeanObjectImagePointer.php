@@ -4,7 +4,7 @@
 namespace App\Repository\RecordBuilder;
 
 
-use App\Date;
+use App\NormalizedDate;
 use DateTimeImmutable;
 use DateTimeInterface;
 use LeanCloud\LeanObject;
@@ -41,7 +41,7 @@ class LeanObjectImagePointer implements ImagePointer
             return $lastAppearedOn;
         }
 
-        return Date::fromTimestamp($lastAppearedOn)->get();
+        return NormalizedDate::fromTimestamp($lastAppearedOn)->get();
     }
 
     public function setLastAppearedOn(DateTimeImmutable $date) : void

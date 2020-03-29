@@ -2,18 +2,16 @@
 
 namespace App\Repository\Doctrine;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Types\Type;
 use InvalidArgumentException;
-
-use function bin2hex;
-use function hex2bin;
 
 class ArchiveTable extends AbstractTable
 {
-    private const NAME = 'archives';
+    use HexToBinaryTrait;
+    use SerializeTrait;
 
-    private const COLUMNS = [
+    protected const NAME = 'archives';
+
+    protected const COLUMNS = [
         //'id' => 'integer',
         'id' => 'binary',
         'market' => 'smallint',
@@ -27,14 +25,14 @@ class ArchiveTable extends AbstractTable
         'coverstory' => 'blob',
     ];
 
-    private const INDEXES = [
+    protected $indexes = [
         [self::PRIMARY_KEY_INDEX, ['id']],
         [self::NORMAL_INDEX, ['date_']],
         [self::NORMAL_INDEX, ['image_id']],
         //[self::NORMAL_INDEX, ['image_object_id']]
     ];
 
-    private const COLUMN_OPTIONS = [
+    protected $columnOptions = [
         //'id' => ['autoincrement' => true, 'unsigned' => true],
         'id' => ['length' => 12, 'fixed' => true],
         'market' => ['unsigned' => true],
@@ -47,7 +45,7 @@ class ArchiveTable extends AbstractTable
         'coverstory' => ['notnull' => false, 'length' => 65535]
     ];
 
-    private const QUERY_CALLBACKS = [
+    protected $queryCallbacks = [
         'id' => 'hex2bin',
         'market' => 'convertToMarketId',
         'image_id' => 'hex2bin',
@@ -56,7 +54,7 @@ class ArchiveTable extends AbstractTable
         'coverstory' => 'serialize'
     ];
 
-    private const RESULT_CALLBACKS = [
+    protected $resultCallbacks = [
         //'id' => 'convertToPHPValue',
         'id' => 'bin2hex',
         'date_' => 'convertToPHPValue',
@@ -69,53 +67,13 @@ class ArchiveTable extends AbstractTable
         'coverstory' => 'deserialize'
     ];
 
-    private const FIELD_MAPPINGS = [
+    protected $fieldMappings = [
         'date_' => 'date'
     ];
 
-    private const COLUMN_NAME_MAPPINGS = [
+    protected $columnNameMappings = [
         'date' => 'date_'
     ];
-
-    /** @var AbstractPlatform */
-    private $platform;
-
-    /** @var SerializerInterface */
-    private $serializer;
-
-    public function __construct(AbstractPlatform $platform, SerializerInterface $serializer)
-    {
-        parent::__construct(
-            self::NAME,
-            self::COLUMNS,
-            self::INDEXES,
-            self::COLUMN_OPTIONS,
-            self::QUERY_CALLBACKS,
-            self::RESULT_CALLBACKS,
-            self::FIELD_MAPPINGS,
-            self::COLUMN_NAME_MAPPINGS
-        );
-
-        $this->platform = $platform;
-        $this->serializer = $serializer;
-    }
-
-    public function convertToPHPValue($value, string $column)
-    {
-        $type = $this->getColumnType($column);
-
-        return Type::getType($type)->convertToPHPValue($value, $this->platform);
-    }
-
-    public function serialize($data) : string
-    {
-        return $this->serializer->serialize($data);
-    }
-
-    public function deserialize(string $data)
-    {
-        return $this->serializer->deserialize($data);
-    }
 
     private const MARKET_NAME_MAPPINGS = [
         1 => 'zh-CN',
@@ -150,9 +108,9 @@ class ArchiveTable extends AbstractTable
         return array_flip(self::MARKET_NAME_MAPPINGS);
     }
 
-    public function convertToMarketName(string $id) : string
+    protected function convertToMarketName(string $id, string $type) : string
     {
-        $id = $this->convertToPHPValue($id, 'market');
+        $id = $this->convertToPHPValue($id, $type);
 
         if (isset(self::MARKET_NAME_MAPPINGS[$id])) {
             return self::MARKET_NAME_MAPPINGS[$id];
@@ -161,7 +119,7 @@ class ArchiveTable extends AbstractTable
         throw new InvalidArgumentException("Cannot convert market id ${id} to name");
     }
 
-    public function convertToMarketId(string $name) : int
+    protected function convertToMarketId(string $name) : int
     {
         if (isset(self::MARKET_ID_MAPPINGS[$name])) {
             return self::MARKET_ID_MAPPINGS[$name];
@@ -170,13 +128,8 @@ class ArchiveTable extends AbstractTable
         throw new InvalidArgumentException("Cannot convert market name ${name} to id");
     }
 
-    public function bin2hex(string $bin) : string
+    protected function initialize($params) : void
     {
-        return bin2hex($bin);
-    }
-
-    public function hex2bin(string $hex) : string
-    {
-        return hex2bin($hex);
+        $this->setSerializer($params[0]);
     }
 }
