@@ -2,25 +2,32 @@
 
 namespace App\Repository\LeanCloud;
 
-use App\Repository\RecordInterface;
-use App\Repository\Struct\Record as Data;
+use App\Helper;
+use App\Model\Date;
 use LeanCloud\LeanObject;
 
-class Record implements RecordInterface
+final class Record extends LeanObject
 {
-    /** @var LeanObject */
-    private $object;
+    use LeanObjectTrait;
 
-    /** @var Data */
-    private $data;
+    public const CLASS_NAME = 'Archive';
 
-    public function __construct(Data $data)
+    protected static $className = self::CLASS_NAME;
+
+    private const FIELD_MAPPINGS = [
+        'info' => 'description',
+        'hs' => 'hotspots',
+        'msg' => 'messages',
+        'cs' => 'coverstory'
+    ];
+
+    public function toModelParams() : array
     {
-        $this->data = $data;
-    }
+        $data = $this->getData();
+        unset($data['image']);
+        $data = Helper::array_replace_keys($data, self::FIELD_MAPPINGS);
+        $data['date'] = Date::createFromYmd($data['date']);
 
-    public function setImagePointer()
-    {
-        $this->object->set('image', );
+        return $data;
     }
 }

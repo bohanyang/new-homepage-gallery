@@ -2,11 +2,15 @@
 
 namespace App\Controller;
 
+use App\Model\Date;
+use App\Model\Image;
+use App\Model\ImageView;
+use App\Model\RecordView;
+use App\Repository\LeanCloudRepository;
 use App\Repository\NotFoundException;
 use App\Repository\RepositoryInterface;
 use App\Settings;
 use DateTimeZone;
-use InvalidArgumentException;
 use League\Uri\UriString;
 use Safe\DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -52,7 +56,7 @@ final class GalleryController extends AbstractController
     private $params = [];
 
     public function __construct(
-        RepositoryInterface $repository,
+        LeanCloudRepository $repository,
         CacheInterface $cache,
         Settings $settings,
         ContainerBagInterface $params
@@ -87,7 +91,8 @@ final class GalleryController extends AbstractController
     public function image(string $name)
     {
         try {
-            $result = $this->cache->get(
+            /** @var ImageView $image */
+            $image = $this->cache->get(
                 "image.$name",
                 function (ItemInterface $item) use ($name) {
                     $this->expiresAt($item);
@@ -96,37 +101,43 @@ final class GalleryController extends AbstractController
                 }
             );
         } catch (NotFoundException $e) {
-            throw $this->createNotFoundException($e->getMessage());
+            throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         return $this->render(
             'image.html.twig',
             [
-                'image' => $result,
-                'mirror' => $this->params['image_origin'],
-                'video' => $this->getVideoUrl($result),
-                'res' => $this->settings->getImageSize(),
+                'image' => $image,
+                'image_origin' => $this->params['image_origin'],
+                'image_size' => $this->settings->getImageSize(),
+                'video_url' => $this->getVideoUrl($image),
                 'flags' => self::FLAGS,
-                'dateStringFormat' => self::DATE_STRING_FORMAT
+                'date_format' => self::DATE_STRING_FORMAT
             ]
         );
     }
 
     public function browse(string $page)
     {
+        if ($page < 1) {
+            throw new BadRequestHttpException("Invalid page number '${page}'");
+        }
+
         $limit = 15;
+        $skip = $limit * ($page - 1);
 
         try {
-            $results = $this->cache->get(
+            /** @var Image[] $images */
+            $images = $this->cache->get(
                 "browse.$page",
-                function (ItemInterface $item) use ($limit, $page) {
+                function (ItemInterface $item) use ($limit, $skip) {
                     $this->expiresAt($item);
 
-                    return $this->repository->listImages($limit, (int) $page);
+                    return $this->repository->listImages($limit, $skip);
                 }
             );
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
+        } catch (NotFoundException $e) {
+            throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         return $this->render(
@@ -134,38 +145,39 @@ final class GalleryController extends AbstractController
             [
                 'limit' => $limit,
                 'page' => $page,
-                'images' => $results,
-                'mirror' => $this->params['image_origin'],
-                'res' => $this->settings->getThumbnailSize()
+                'images' => $images,
+                'image_origin' => $this->params['image_origin'],
+                'image_size' => $this->settings->getThumbnailSize()
             ]
         );
     }
 
     public function date(string $date)
     {
-        $dateInfo = $this->getDateStringInfo($date);
+        $date = $this->getDateStringInfo($date);
 
         try {
-            $results = $this->cache->get(
-                "date.$date",
-                function (ItemInterface $item) use ($dateInfo) {
+            /** @var ImageView[] $images */
+            $images = $this->cache->get(
+                "date.{$date['current']}",
+                function (ItemInterface $item) use ($date) {
                     $this->expiresAt($item);
 
-                    return $this->repository->findArchivesByDate($dateInfo['object']);
+                    return $this->repository->findImagesByDate(Date::createFromYmd($date['current']));
                 }
             );
         } catch (NotFoundException $e) {
-            throw $this->createNotFoundException($e->getMessage());
+            throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         return $this->render(
             'date.html.twig',
             [
-                'images' => $results,
-                'mirror' => $this->params['image_origin'],
-                'res' => $this->settings->getThumbnailSize(),
+                'images' => $images,
+                'image_origin' => $this->params['image_origin'],
+                'image_size' => $this->settings->getThumbnailSize(),
                 'flags' => self::FLAGS,
-                'date' => $dateInfo
+                'date' => $date
             ]
         );
     }
@@ -187,29 +199,27 @@ final class GalleryController extends AbstractController
         $date = $this->getDateStringInfo($date);
 
         try {
-            $result = $this->cache->get(
-                "archive.$market." . $date['current'],
+            /** @var RecordView $record */
+            $record = $this->cache->get(
+                "archive.${market}.{$date['current']}",
                 function (ItemInterface $item) use ($market, $date) {
                     $this->expiresAt($item);
 
-                    return $this->repository->getArchive($market, $date['object']);
+                    return $this->repository->getRecord($market, Date::createFromYmd($date['current']));
                 }
             );
         } catch (NotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage());
         }
 
-        $image = $result['image'];
-        unset($result['image']);
-
         return $this->render(
             'archive.html.twig',
             [
-                'archive' => $result,
-                'image' => $image,
-                'mirror' => $this->params['image_origin'],
-                'video' => $this->getVideoUrl($image),
-                'res' => $this->settings->getImageSize(),
+                'record' => $record,
+                'image' => $record->image,
+                'image_origin' => $this->params['image_origin'],
+                'video' => $this->getVideoUrl($record->image),
+                'image_size' => $this->settings->getImageSize(),
                 'date' => $date
             ]
         );
@@ -251,12 +261,12 @@ final class GalleryController extends AbstractController
 
     private function getVideoUrl($image)
     {
-        if (empty($image['vid']['sources'][1][2])) {
+        if (empty($image->vid['sources'][1][2])) {
             return null;
         }
 
         $url = UriString::parse($this->params['video_origin']);
-        $url['path'] .= UriString::parse($image['vid']['sources'][1][2])['path'];
+        $url['path'] .= UriString::parse($image->vid['sources'][1][2])['path'];
 
         return UriString::build($url);
     }

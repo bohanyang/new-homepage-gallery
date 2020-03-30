@@ -37,8 +37,8 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Repository\RepositoryInterface:
-        alias: 'App\Repository\LeanCloudRepository'
+#    App\Repository\RepositoryInterface:
+#        alias: 'App\Repository\LeanCloudRepository'
 
     App\LeanCloud:
         arguments:
@@ -72,7 +72,7 @@ services:
 
     doctrine_migrations.diff_command:
         class: 'Doctrine\Bundle\MigrationsBundle\Command\MigrationsDiffDoctrineCommand'
-        arguments: ['@App\Repository\Doctrine\Repository']
+        arguments: ['@App\Repository\DoctrineRepository']
         tags: ['console.command']
 
     OTPHP\TOTPInterface:

@@ -3,119 +3,135 @@
 namespace App\Repository;
 
 use App\LeanCloud;
-use App\Repository\RecordBuilder\LeanObjectImagePointer;
-use Safe\DateTimeImmutable;
+use App\Model\Date;
+use App\Model\Image as ImageModel;
+use App\Model\ImageView;
+use App\Model\Record as RecordModel;
+use App\Model\RecordView;
+use App\Repository\LeanCloud\Image;
+use App\Repository\LeanCloud\Record;
 use DateTimeInterface;
-use DateTimeZone;
+use InvalidArgumentException;
 use LeanCloud\ACL;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
-use UnexpectedValueException;
 
-class LeanCloudRepository extends AbstractRepository
+class LeanCloudRepository
 {
     use RepositoryTrait;
 
-    public const IMAGE_CLASS_NAME = 'Image';
-    public const ARCHIVE_CLASS_NAME = 'Archive';
-
-    /** @var ACL $acl */
-    private $acl;
-
-    public function __construct(LeanCloud $lc)
+    public function __construct(LeanCloud $LeanCloud)
     {
-        $acl = new ACL();
-        $acl->setPublicReadAccess(true);
-        $acl->setPublicWriteAccess(true);
-        $this->acl = $acl;
+        Image::registerClass();
+        Record::registerClass();
     }
 
-    public function getImage(string $name)
+    private static function createACL() : ACL
     {
-        $innerQuery = new Query(self::IMAGE_CLASS_NAME);
-        $innerQuery->equalTo('name', $name);
+        $ACL = new ACL();
+        $ACL->setPublicReadAccess(true);
+        $ACL->setPublicWriteAccess(true);
 
-        $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query->matchesInQuery('image', $innerQuery)->addDescend('date')->_include('image');
-        $results = $query->find();
-
-        if ($results === []) {
-            throw new NotFoundException('Image not found');
-        }
-
-        $image = [];
-
-        foreach ($results as $result) {
-            $result = self::transform($result);
-
-            if ($image === []) {
-                $image = $result['image'];
-            }
-
-            unset($result['image']);
-
-            $image['archives'][] = $result;
-        }
-
-        return $image;
+        return $ACL;
     }
 
-    public function listImages(int $limit, int $page)
+    public function getImage(string $name) : ImageView
     {
-        $skip = $this->getSkip($limit, $page);
+        $imageQuery = new Query(Image::CLASS_NAME);
+        $imageQuery->equalTo('name', $name);
 
-        $query = new Query(self::IMAGE_CLASS_NAME);
+        $query = new Query(Record::CLASS_NAME);
+        $query->matchesInQuery('image', $imageQuery)->addDescend('date')->_include('image');
+
+        /** @var Record[] $records */
+        $records = $query->find();
+
+        if ($records === []) {
+            throw NotFoundException::image($name);
+        }
+
+        /** @var Image $image */
+        $image = $records[0]->get('image');
+        $image = $image->toModelParams();
+
+        foreach ($records as $record) {
+            $image['records'][] = $record->toModelParams();
+        }
+
+        return new ImageView($image);
+    }
+
+    public function listImages(int $limit, int $skip = 0) : array
+    {
+        $query = new Query(Image::CLASS_NAME);
         $query->limit($limit)->skip($skip)->addDescend('createdAt');
-        $results = $query->find();
 
-        if ($results === []) {
-            throw new NotFoundException('No images found');
+        /** @var Image[] $images */
+        $images = $query->find();
+
+        if ($images === []) {
+            throw NotFoundException::images();
         }
 
-        return array_map(
-            function (LeanObject $object) {
-                return $object->toJSON();
-            },
-            $results
-        );
-    }
-
-    public function getArchive(string $market, DateTimeInterface $date)
-    {
-        $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query->equalTo('market', $market)->equalTo('date', $date->format('Ymd'))->_include('image');
-        $result = $query->first();
-
-        if ($result === null) {
-            throw new NotFoundException('Archive not found');
+        foreach ($images as $i => $image) {
+            $images[$i] = new ImageModel($image->toModelParams());
         }
 
-        return self::transform($result);
+        return $images;
     }
 
-    public function findArchivesByDate(DateTimeInterface $date)
+    public function getRecord(string $market, Date $date) : RecordView
     {
-        $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $query->equalTo('date', $date->format('Ymd'))->_include('image');
-        $results = $query->find();
+        $query = new Query(Record::CLASS_NAME);
+        $query->equalTo('market', $market)->equalTo('date', $date->get()->format('Ymd'))->_include('image');
 
-        if ($results === []) {
-            throw new NotFoundException('No archives found');
+        $record = $query->find();
+
+        if ($record === []) {
+            throw NotFoundException::record($market, $date);
+        }
+
+        /** @var Record $record */
+        $record = $record[0];
+
+        /** @var Image $image */
+        $image = $record->get('image');
+
+        $record = $record->toModelParams();
+        $record['image'] = $image->toModelParams();
+
+        return new RecordView($record);
+    }
+
+    public function findImagesByDate(Date $date) : array
+    {
+        $query = new Query(Record::CLASS_NAME);
+        $query->equalTo('date', $date->get()->format('Ymd'))->descend('market')->_include('image');
+
+        /** @var Record[] $records */
+        $records = $query->find();
+
+        if ($records === []) {
+            throw NotFoundException::date($date);
         }
 
         $images = [];
 
-        foreach ($results as $result) {
-            $result = self::transform($result);
-            $imageId = $result['image']['objectId'];
+        foreach ($records as $record) {
+            /** @var Image $image */
+            $image = $record->get('image');
+            $id = $image->get('objectId');
 
-            if (!isset($images[$imageId])) {
-                $images[$imageId] = $result['image'];
+            if (!isset($images[$id])) {
+                $images[$id] = $image->toModelParams();
             }
 
-            unset($result['image']);
+            $images[$id]['records'][] = $record->toModelParams();
+        }
 
-            $images[$imageId]['archives'][] = $result;
+        foreach ($images as $id => $image) {
+            $images[] = new ImageView($image);
+            unset($images[$id]);
         }
 
         return $images;
@@ -123,7 +139,7 @@ class LeanCloudRepository extends AbstractRepository
 
     public function findMarketsHaveArchiveOfDate(DateTimeInterface $date, array $markets)
     {
-        $query = new Query(self::ARCHIVE_CLASS_NAME);
+        $query = new Query(Record::CLASS_NAME);
         $query->equalTo('date', $date->format('Ymd'))->containedIn('market', $markets);
         $results = [];
 
@@ -135,141 +151,88 @@ class LeanCloudRepository extends AbstractRepository
         return $results;
     }
 
-    public function exportImages(int $skip, int $limit)
+    public function save(RecordModel $record, ImageModel $image) : void
     {
-        $query = new Query(self::IMAGE_CLASS_NAME);
-        $results = $query->find($skip, $limit);
-        foreach ($results as $i => $result) {
-            /** @var LeanObject $result */
-            $result = $result->toJSON();
-            $result['id'] = $result['objectId'];
-            unset($result['objectId'], $result['ACL'], $result['createdAt'], $result['updatedAt']);
-            $results[$i] = $result;
+        $image = $this->findOrCreateImage($record, $image);
+        $record = $this->createRecord($record, $image);
+        $duplicates = $this->findDuplicateRecord($record);
+        if ($duplicates !== []) {
+            throw new InvalidArgumentException('Duplicate record found');
         }
-        return $results;
+        LeanObject::saveAll([$record]);
     }
 
-    public function exportArchives(int $skip, int $limit)
+    private function findOrCreateImage(RecordModel $record, ImageModel $image) : Image
     {
-        $query = new Query(self::ARCHIVE_CLASS_NAME);
-        $results = $query->find($skip, $limit);
-        foreach ($results as $i => $result) {
-            /** @var LeanObject $result */
-            $result = self::transform($result);
-            $result['id'] = $result['objectId'];
-            $result['image_id'] = $result['image']['objectId'];
-            unset($result['image'], $result['objectId'], $result['ACL'], $result['createdAt'], $result['updatedAt']);
-            $results[$i] = $result;
-        }
-        return $results;
-    }
+        $query = new Query(Image::CLASS_NAME);
+        $query->equalTo('name', $image->name);
+        $object = $query->find();
 
-    private static function arrayReplaceKeys($arr, $keyMap)
-    {
-        $result = [];
+        if ($object === []) {
+            $object = new Image();
 
-        foreach ($arr as $key => $val) {
-            $key = $keyMap[$key] ?? $key;
-            $result[$key] = $val;
+            foreach ($image as $field => $value) {
+                if ($value !== null) {
+                    $object->set($field, $value);
+                }
+            }
+
+            $object->set('available', false);
+            /*
+            $date = $record->date->get();
+            $object->set('firstAppearedOn', $date);
+            $object->set('lastAppearedOn', $date);
+            */
+
+            return $object;
         }
 
-        return $result;
+        $object = $object[0];
+        $this->referExistingImage($record, $image, $object);
+
+        return $object;
     }
 
-    private const FIELD_NAMES = [
-        'archives' => [
-            'info' => 'description',
-            'hs' => 'hotspots',
-            'msg' => 'messages',
-            'cs' => 'coverstory'
-        ]
-    ];
-
-    private static function transform(LeanObject $result)
+    private function createRecord(RecordModel $record, Image $image) : Record
     {
-        $archive = self::arrayReplaceKeys($result->toJSON(), self::FIELD_NAMES['archives']);
-        $archive['date'] = DateTimeImmutable::createFromFormat(
-            'YmdHis',
-            "{$archive['date']}000000",
-            new DateTimeZone('UTC')
-        );
+        $fieldMappings = [
+            'description' => 'info',
+            'hotspots' => 'hs',
+            'messages' => 'msg',
+            'coverstory' => 'cs'
+        ];
 
-        return $archive;
+        $object = new Record();
+
+        foreach ($record as $field => $value) {
+            if (
+                $field !== 'date' &&
+                $value !== null
+            ) {
+                $field = $fieldMappings[$field] ?? $field;
+                $object->set($field, $value);
+            }
+        }
+
+        $object->set('date', $record->date->get()->format('Ymd'));
+        $object->set('image', $image);
+
+        return $object;
     }
 
-    public function save(array $data)
+    private function findDuplicateRecord(Record $record) : array
     {
-        $data['image'] = $this->getImageObject($data['image']);
-        $data = $this->getArchiveObject($data);
-        LeanObject::saveAll([$data]);
-    }
-
-    public function findDuplicatedArchive(string $market, string $date, string $image)
-    {
-        $marketQuery = new Query(self::ARCHIVE_CLASS_NAME);
-        $marketQuery->equalTo('market', $market);
-        $dateQuery = new Query(self::ARCHIVE_CLASS_NAME);
-        $dateQuery->equalTo('date', $date);
-        $innerQuery = new Query(self::IMAGE_CLASS_NAME);
-        $innerQuery->equalTo('name', $image);
-        $imageQuery = new Query(self::ARCHIVE_CLASS_NAME);
-        $imageQuery->matchesInQuery('image', $innerQuery);
+        $marketQuery = new Query(Record::CLASS_NAME);
+        $marketQuery->equalTo('market', $record->get('market'));
+        $dateQuery = new Query(Record::CLASS_NAME);
+        $dateQuery->equalTo('date', $record->get('date'));
+        $imageSubQuery = new Query(Image::CLASS_NAME);
+        $imageSubQuery->equalTo('name', $record->get('image')->get('name'));
+        $imageQuery = new Query(Record::CLASS_NAME);
+        $imageQuery->matchesInQuery('image', $imageSubQuery);
         $orQuery = Query::orQuery($dateQuery, $imageQuery);
         $query = Query::andQuery($marketQuery, $orQuery);
 
         return $query->find();
-    }
-
-    private function getArchiveObject(array $data) : LeanObject
-    {
-        $date = $data['date']->format('Ymd');
-        /** @var LeanObject $image */
-        $image = $data['image'];
-        $results = $this->findDuplicatedArchive($data['market'], $date, $image->get('name'));
-        if ($results !== []) {
-            throw new UnexpectedValueException('Duplicated archive found');
-        }
-        $object = new LeanObject(self::ARCHIVE_CLASS_NAME);
-        $object->setACL($this->acl);
-        $object->set('market', $data['market']);
-        $object->set('date', $date);
-        $object->set('info', $data['description']);
-        $object->set('image', $image);
-        if (isset($data['link'])) {
-            $object->set('link', $data['link']);
-        }
-        if (isset($data['hotspots'])) {
-            $object->set('hs', $data['hotspots']);
-        }
-        if (isset($data['messages'])) {
-            $object->set('msg', $data['messages']);
-        }
-        return $object;
-    }
-
-    private function getImageObject(array $image)
-    {
-        $object = $this->findImage($image['name']);
-        if ($object === null) {
-            $object = new LeanObject(self::IMAGE_CLASS_NAME);
-            $object->setACL($this->acl);
-            $object->set('name', $image['name']);
-            $object->set('urlbase', $image['urlbase']);
-            $object->set('copyright', $image['copyright']);
-            $object->set('wp', $image['wp']);
-            $object->set('available', false);
-            if (isset($image['vid'])) {
-                $object->set('vid', $image['vid']);
-            }
-            return $object;
-        }
-
-        $object = $object->getImage();
-
-        if ($image['copyright'] !== $object->get('copyright') || $image['wp'] !== $object->get('wp')) {
-            throw new UnexpectedValueException('Image does not match the existing one');
-        }
-
-        return $object;
     }
 }

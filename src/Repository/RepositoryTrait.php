@@ -2,20 +2,28 @@
 
 namespace App\Repository;
 
-use InvalidArgumentException;
+use App\Model\Image;
+use App\Model\Record;
+use UnexpectedValueException;
 
 trait RepositoryTrait
 {
-    private function getSkip(int $limit, int $page) : int
+    private function referExistingImage(Record $record, Image $image, ImagePointer $pointer)
     {
-        if ($limit < 1) {
-            throw new InvalidArgumentException('The limit should be an integer greater than or equal to 1.');
+        if (
+            $pointer->getWp() !== $image->wp ||
+            $pointer->getCopyright() !== $image->copyright
+        ) {
+            throw new UnexpectedValueException('Image does not match the existing one');
         }
-
-        if ($page < 1) {
-            throw new InvalidArgumentException('The page number should be an integer greater than or equal to 1.');
+        /*
+        $date = $pointer->getLastAppearedOn();
+        if (
+            $date === null ||
+            $date->get() < $record->date->get()
+        ) {
+            $pointer->setLastAppearedOn($record->date);
         }
-
-        return $limit * ($page - 1);
+        */
     }
 }

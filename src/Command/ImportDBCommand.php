@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Repository\Doctrine\Repository;
+use App\Repository\DoctrineRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -11,15 +11,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ImportDBCommand extends Command
 {
     /**
-     * @var Repository
+     * @var DoctrineRepository
      */
-    private Repository $repository;
+    private DoctrineRepository $repository;
     /**
-     * @var Repository
+     * @var DoctrineRepository
      */
-    private Repository $db;
+    private DoctrineRepository $db;
 
-    public function __construct(Repository $sqlite3, Repository $db)
+    public function __construct(DoctrineRepository $sqlite3, DoctrineRepository $db)
     {
         parent::__construct();
         $this->repository = $db;

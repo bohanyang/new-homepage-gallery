@@ -1,11 +1,12 @@
 <?php
 
-namespace App;
+namespace App\Model;
 
 use DateTimeInterface;
+use DateTimeZone;
 use Safe\DateTimeImmutable;
 
-class NormalizedDate
+final class Date
 {
     private $date;
 
@@ -13,15 +14,20 @@ class NormalizedDate
     {
     }
 
-    public static function fromDate(DateTimeInterface $date)
+    public static function createFromYmd(string $date)
     {
         $instance = new self();
-        $instance->date = DateTimeImmutable::createFromFormat('Y-m-d', "!{$date->format('Y-m-d')}");
+        $instance->date = DateTimeImmutable::createFromFormat('!Ymd', $date, new DateTimeZone('UTC'));
 
         return $instance;
     }
 
-    public static function fromTimestamp(DateTimeInterface $date)
+    public static function createFromLocal(DateTimeInterface $date)
+    {
+        return self::createFromYmd($date->format('Ymd'));
+    }
+
+    public static function createFromUTC(DateTimeInterface $date)
     {
         $instance = new self();
         $date = new DateTimeImmutable("@{$date->getTimestamp()}");

@@ -14,15 +14,15 @@
         <div class="row">
             <div class="col-xs-12">
                 <a href="{{ path('image', {name: image.name}) }}">
-                    <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
+                    <img src="{{ image_origin }}{{ image.urlbase }}_{{ image_size }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
                 </a>
             </div>
         </div>
         <div class="row">
             <div class="col-xs-12 para-of-date">
-                {% for archive in image.archives %}
-                    <a href="{{ path('archive', {market: archive.market, date: date.current}) }}">
-                        <img src="{{ attribute(flags, archive.market) }}" class="flag-of-date">
+                {% for record in image.records %}
+                    <a href="{{ path('archive', {market: record.market, date: date.current}) }}">
+                        <img src="{{ attribute(flags, record.market) }}" class="flag-of-date">
                     </a>
                 {% endfor %}
             </div>

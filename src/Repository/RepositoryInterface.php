@@ -2,16 +2,20 @@
 
 namespace App\Repository;
 
-use App\Repository\RecordBuilder\ImagePointer;
-use DateTimeImmutable;
+use App\Model\ImageView;
+use App\Model\Image;
+use App\Model\Date;
+use App\Model\RecordView;
 
 interface RepositoryInterface
 {
-    public function getRecordsByImageName(string $name);
+    public function getImage(string $name) : ImageView;
 
-    public function listImages(int $limit, int $skip = 0);
+    /** @return Image[] */
+    public function listImages(int $limit, int $skip = 0) : array;
 
-    public function getRecord(string $market, DateTimeImmutable $date);
+    public function getRecord(string $market, Date $date) : RecordView;
 
-    public function getRecordsByDate(DateTimeImmutable $date);
+    /** @return ImageView[] */
+    public function findImagesByDate(Date $date) : array;
 }

@@ -2,6 +2,9 @@
 
 namespace App\Command;
 
+use App\Model\Date;
+use App\Model\Image;
+use App\Model\Record;
 use App\Repository\LeanCloudRepository;
 use BohanYang\BingWallpaper\CurrentTime;
 use BohanYang\BingWallpaper\Client;
@@ -75,8 +78,12 @@ class TestCommand extends Command
             $marketDates[] = RequestParams::create($markets[$market], $now->getTheLaterDate());
         }
         $res = $this->client->batch($marketDates);
-        foreach ($res as $result) {
-            $this->repository->save($result);
+        foreach ($res as $record) {
+            $image = new Image($record['image']);
+            unset($record['image']);
+            $record['date'] = Date::createFromLocal($record['date']);
+            $record = new Record($record);
+            $this->repository->save($record, $image);
         }
         return 0;
     }

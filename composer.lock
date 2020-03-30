@@ -73,7 +73,7 @@
             "version": "dev-master",
             "dist": {
                 "type": "path",
-                "url": "../bing-wallpaper",
+                "url": "../bing-wallpaper-git",
                 "reference": "4b333619c396699ac01c61fd6a027c0030e45907"
             },
             "require": {

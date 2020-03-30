@@ -2,8 +2,6 @@
 
 namespace App\Command;
 
-use App\Repository\Doctrine\Repository;
-use App\Repository\LeanCloudRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -11,20 +9,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ImportCommand extends Command
 {
-    /**
-     * @var LeanCloudRepository
-     */
-    private LeanCloudRepository $repository;
-    /**
-     * @var Repository
-     */
-    private Repository $db;
 
-    public function __construct(LeanCloudRepository $repository, Repository $db)
+    public function __construct()
     {
         parent::__construct();
-        $this->repository = $repository;
-        $this->db = $db;
+        //$this->repository = $repository;
+        //$this->db = $db;
     }
 
     protected static $defaultName = 'app:import';

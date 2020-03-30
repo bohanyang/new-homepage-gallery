@@ -2,26 +2,20 @@
 
 namespace App\Command;
 
-use App\Repository\Doctrine\Repository;
-use DateTimeImmutable;
+use App\Repository\DoctrineRepository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
-use function bin2hex;
-use function dd;
 
 class TestBinaryIdCommand extends Command
 {
     /**
-     * @var Repository
+     * @var DoctrineRepository
      */
-    private Repository $repository;
+    private DoctrineRepository $repository;
 
-    public function __construct(Repository $repository)
+    public function __construct(DoctrineRepository $repository)
     {
         parent::__construct();
         $this->repository = $repository;

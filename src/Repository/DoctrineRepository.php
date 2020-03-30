@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Repository\Doctrine;
+namespace App\Repository;
 
-use App\Repository\NotFoundException;
-use App\Repository\RecordBuilder\ImagePointer;
-use App\Repository\RepositoryInterface;
-use App\Repository\RepositoryTrait;
+use App\Repository\Doctrine\AbstractTable;
+use App\Repository\Doctrine\ArchiveTable;
+use App\Repository\Doctrine\ImagePointer;
+use App\Repository\Doctrine\ImageTable;
+use App\Repository\Doctrine\SelectQuery;
+use App\Repository\Doctrine\Serializer;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
@@ -18,7 +20,7 @@ use UnexpectedValueException;
 use function array_column;
 use function Safe\sprintf;
 
-class Repository implements SchemaProviderInterface, RepositoryInterface
+class DoctrineRepository implements SchemaProviderInterface
 {
     use RepositoryTrait;
 
