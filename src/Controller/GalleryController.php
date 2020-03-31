@@ -11,7 +11,6 @@ use InvalidArgumentException;
 use League\Uri\UriString;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -115,6 +114,10 @@ final class GalleryController extends AbstractController
     public function browse(string $page)
     {
         $limit = 15;
+
+        if ($page < 1) {
+            throw $this->createNotFoundException();
+        }
 
         try {
             $results = $this->cache->get(
