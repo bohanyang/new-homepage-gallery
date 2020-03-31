@@ -37,8 +37,8 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-#    App\Repository\RepositoryInterface:
-#        alias: 'App\Repository\LeanCloudRepository'
+    App\Repository\RepositoryInterface:
+        alias: 'App\Repository\DoctrineRepository'
 
     App\LeanCloud:
         arguments:
@@ -52,7 +52,7 @@ services:
             - '%env(LEANCLOUD_SESSION_TOKEN)%'
             - '%env(LEANCLOUD_APP_ENV)%'
             - '%kernel.environment%'
-            - '%kernel.debug%'
+            - false
 
     ipip\db\Reader:
         arguments:

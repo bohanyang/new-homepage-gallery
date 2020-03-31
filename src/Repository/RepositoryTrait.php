@@ -8,7 +8,7 @@ use UnexpectedValueException;
 
 trait RepositoryTrait
 {
-    private function referExistingImage(Record $record, Image $image, ImagePointer $pointer)
+    private function referExistingImage(ImagePointerInterface $pointer, Image $image, Record $record)
     {
         if (
             $pointer->getWp() !== $image->wp ||
@@ -16,7 +16,6 @@ trait RepositoryTrait
         ) {
             throw new UnexpectedValueException('Image does not match the existing one');
         }
-        /*
         $date = $pointer->getLastAppearedOn();
         if (
             $date === null ||
@@ -24,6 +23,5 @@ trait RepositoryTrait
         ) {
             $pointer->setLastAppearedOn($record->date);
         }
-        */
     }
 }

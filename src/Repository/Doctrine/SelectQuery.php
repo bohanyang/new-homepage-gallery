@@ -34,7 +34,7 @@ class SelectQuery
         $this->platform = $conn->getDatabasePlatform();
     }
 
-    public function addTable(AbstractTable $table, array $columns, ?string $tableAlias = null)
+    public function addTable(AbstractTable $table, array $columns, ?string $tableAlias = null) : string
     {
         $tableAlias = ($tableAlias === null) ? '' : $tableAlias . '.';
 
@@ -45,7 +45,7 @@ class SelectQuery
         return $table->getName();
     }
 
-    private function addAlias(AbstractTable $table, string $tableAlias, string $column)
+    private function addAlias(AbstractTable $table, string $tableAlias, string $column) : void
     {
         $alias = 'c' . $this->counter++;
         $this->selects[] = "$tableAlias$column $alias";
@@ -64,7 +64,7 @@ class SelectQuery
         return $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
     }
 
-    public function getData()
+    public function getData() : array
     {
         $results = $this->fetchAll();
 
@@ -83,7 +83,7 @@ class SelectQuery
         return $results;
     }
 
-    public function getResults()
+    public function getResults() : array
     {
         $results = $this->fetchAll();
 

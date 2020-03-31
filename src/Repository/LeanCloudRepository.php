@@ -16,7 +16,7 @@ use LeanCloud\ACL;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
 
-class LeanCloudRepository
+class LeanCloudRepository implements RepositoryInterface
 {
     use RepositoryTrait;
 
@@ -126,7 +126,7 @@ class LeanCloudRepository
                 $images[$id] = $image->toModelParams();
             }
 
-            $images[$id]['records'][] = $record->toModelParams();
+            $images[$id]['records'][] = new RecordModel($record->toModelParams());
         }
 
         foreach ($images as $id => $image) {
@@ -153,7 +153,7 @@ class LeanCloudRepository
 
     public function save(RecordModel $record, ImageModel $image) : void
     {
-        $image = $this->findOrCreateImage($record, $image);
+        $image = $this->findOrCreateImage($image, $record);
         $record = $this->createRecord($record, $image);
         $duplicates = $this->findDuplicateRecord($record);
         if ($duplicates !== []) {
@@ -162,7 +162,7 @@ class LeanCloudRepository
         LeanObject::saveAll([$record]);
     }
 
-    private function findOrCreateImage(RecordModel $record, ImageModel $image) : Image
+    private function findOrCreateImage(ImageModel $image, RecordModel $record) : Image
     {
         $query = new Query(Image::CLASS_NAME);
         $query->equalTo('name', $image->name);
@@ -178,17 +178,14 @@ class LeanCloudRepository
             }
 
             $object->set('available', false);
-            /*
-            $date = $record->date->get();
-            $object->set('firstAppearedOn', $date);
-            $object->set('lastAppearedOn', $date);
-            */
+            $object->setFirstAppearedOn($record->date);
+            $object->setLastAppearedOn($record->date);
 
             return $object;
         }
 
         $object = $object[0];
-        $this->referExistingImage($record, $image, $object);
+        $this->referExistingImage($object, $image, $record);
 
         return $object;
     }
@@ -214,7 +211,7 @@ class LeanCloudRepository
             }
         }
 
-        $object->set('date', $record->date->get()->format('Ymd'));
+        $object->setDate($record->date);
         $object->set('image', $image);
 
         return $object;
@@ -232,6 +229,14 @@ class LeanCloudRepository
         $imageQuery->matchesInQuery('image', $imageSubQuery);
         $orQuery = Query::orQuery($dateQuery, $imageQuery);
         $query = Query::andQuery($marketQuery, $orQuery);
+
+        return $query->find();
+    }
+
+    public function export(string $class, int $limit, int $skip = 0) : array
+    {
+        $query = new Query($class);
+        $query->limit($limit)->skip($skip)->ascend('objectId');
 
         return $query->find();
     }

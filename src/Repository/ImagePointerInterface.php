@@ -4,7 +4,7 @@ namespace App\Repository;
 
 use App\Model\Date;
 
-interface ImagePointer
+interface ImagePointerInterface
 {
     public function getWp() : bool;
 

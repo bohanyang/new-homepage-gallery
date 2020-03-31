@@ -2,14 +2,18 @@
 
 namespace App\Repository\Doctrine;
 
+use App\Model\Date;
+use DateTimeImmutable;
+use DateTimeInterface;
 use InvalidArgumentException;
 
-class ArchiveTable extends AbstractTable
+class RecordTable extends AbstractTable
 {
     use HexToBinaryTrait;
+    use NormalizeDateTrait;
     use SerializeTrait;
 
-    protected const NAME = 'archives';
+    protected const NAME = 'records';
 
     protected const COLUMNS = [
         //'id' => 'integer',
@@ -48,6 +52,7 @@ class ArchiveTable extends AbstractTable
     protected $queryCallbacks = [
         'id' => 'hex2bin',
         'market' => 'convertToMarketId',
+        'date_' => 'getNormalizedDate',
         'image_id' => 'hex2bin',
         'hotspots' => 'serialize',
         'messages' => 'serialize',
@@ -57,7 +62,8 @@ class ArchiveTable extends AbstractTable
     protected $resultCallbacks = [
         //'id' => 'convertToPHPValue',
         'id' => 'bin2hex',
-        'date_' => 'convertToPHPValue',
+        //'date_' => 'convertToPHPValue',
+        'date_' => 'normalizeDate',
         //'appeared_on' => 'convertToPHPValue',
         'market' => 'convertToMarketName',
         //'image_id' => 'convertToPHPValue',
@@ -103,11 +109,6 @@ class ArchiveTable extends AbstractTable
         'en-IN' => 11,
     ];
 
-    public static function generateMarketIdMappings() : array
-    {
-        return array_flip(self::MARKET_NAME_MAPPINGS);
-    }
-
     protected function convertToMarketName(string $id, string $type) : string
     {
         $id = $this->convertToPHPValue($id, $type);
@@ -131,5 +132,10 @@ class ArchiveTable extends AbstractTable
     protected function initialize($params) : void
     {
         $this->setSerializer($params[0]);
+    }
+
+    public function getAllColumns() : array
+    {
+        return ['market', 'date_', 'description', 'link', 'hotspots', 'messages', 'coverstory'];
     }
 }

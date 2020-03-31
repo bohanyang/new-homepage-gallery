@@ -56,7 +56,7 @@ final class GalleryController extends AbstractController
     private $params = [];
 
     public function __construct(
-        LeanCloudRepository $repository,
+        RepositoryInterface $repository,
         CacheInterface $cache,
         Settings $settings,
         ContainerBagInterface $params

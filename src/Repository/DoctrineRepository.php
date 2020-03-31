@@ -2,9 +2,13 @@
 
 namespace App\Repository;
 
+use App\Model\Date;
+use App\Model\Image;
+use App\Model\ImageView;
+use App\Model\Record;
+use App\Model\RecordView;
 use App\Repository\Doctrine\AbstractTable;
-use App\Repository\Doctrine\ArchiveTable;
-use App\Repository\Doctrine\ImagePointer;
+use App\Repository\Doctrine\RecordTable;
 use App\Repository\Doctrine\ImageTable;
 use App\Repository\Doctrine\SelectQuery;
 use App\Repository\Doctrine\Serializer;
@@ -13,6 +17,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\Provider\SchemaProviderInterface;
+use MongoDB\BSON\ObjectId;
 use RuntimeException;
 use Throwable;
 use UnexpectedValueException;
@@ -20,15 +25,15 @@ use UnexpectedValueException;
 use function array_column;
 use function Safe\sprintf;
 
-class DoctrineRepository implements SchemaProviderInterface
+class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
 {
     use RepositoryTrait;
 
     /** @var ImageTable */
     private $imageTable;
 
-    /** @var ArchiveTable */
-    private $archiveTable;
+    /** @var RecordTable */
+    private $recordTable;
 
     /** @var Connection */
     private $conn;
@@ -43,28 +48,35 @@ class DoctrineRepository implements SchemaProviderInterface
         $this->platform = $conn->getDatabasePlatform();
         $serializer = new Serializer();
         $this->imageTable = new ImageTable($this->platform, $serializer);
-        $this->archiveTable = new ArchiveTable($this->platform, $serializer);
+        $this->recordTable = new RecordTable($this->platform, $serializer);
     }
 
     public function createSchema() : Schema
     {
         $schema = new Schema([], [], $this->conn->getSchemaManager()->createSchemaConfig());
-        $this->archiveTable->addToSchema($schema);
+        $this->recordTable->addToSchema($schema);
         $this->imageTable->addToSchema($schema);
         return $schema;
     }
 
-    public function insertImage($image)
+    public function getConnection() : Connection
     {
-        return $this->insert($this->imageTable, $image);
+        return $this->conn;
     }
 
-    public function insertArchive($archive)
+    public function insertImage($image) : string
     {
-        return $this->insert($this->archiveTable, $archive);
+        $this->insert($this->imageTable, $image);
+        return $image['id'];
     }
 
-    private function insert(AbstractTable $table, $data) : string
+    public function insertRecord($record) : string
+    {
+        $this->insert($this->recordTable, $record);
+        return $record['id'];
+    }
+
+    private function insert(AbstractTable $table, $data) : void
     {
         [$params, $types, $columns, $placeholders] = $table->getInsertParams($data);
 
@@ -75,165 +87,205 @@ class DoctrineRepository implements SchemaProviderInterface
         if ($inserted !== 1) {
             throw new RuntimeException("Failed to insert into table {$table->getName()}");
         }
-
-        return $this->conn->lastInsertId();
     }
 
-    public function saveArchive($archive)
+    public function saveRecord(array $record) : void
     {
         [$params, $types, $columns, $placeholders] =
-            $this->archiveTable->getSubQueryInsertParams($archive, ['market', 'date_', 'image_id']);
+            $this->recordTable->getSubQueryInsertParams($record, ['market', 'date_', 'image_id']);
 
         $subQuery = $this->conn
             ->createQueryBuilder()
             ->select('id')
-            ->from($this->archiveTable->getName())
+            ->from($this->recordTable->getName())
             ->where('market = ?', 'date_ = ? OR image_id = ?')
             ->getSQL();
 
-        $sql = "INSERT INTO {$this->archiveTable->getName()} (${columns}) ${placeholders} WHERE NOT EXISTS (${subQuery})";
+        $sql = "INSERT INTO {$this->recordTable->getName()} (${columns}) ${placeholders} WHERE NOT EXISTS (${subQuery})";
 
         $inserted = $this->conn->executeUpdate($sql, $params, $types);
 
         if ($inserted !== 1) {
             throw new RuntimeException("An archive has the same date or image id already exists");
         }
-
-        return $this->conn->lastInsertId();
     }
 
-    private function getImageId($image) : string
+    private function findImage(string $name) : ?array
     {
-        $result = $this->findImage($image['name']);
+        $query = new SelectQuery($this->conn);
+        $imageTable = $query->addTable($this->imageTable, ['id', 'wp', 'copyright', 'last_appeared_on'], 'i');
+        [$name, $type] = $this->imageTable->getQueryParam('name', $name);
+
+        $query
+            ->getBuilder()
+            ->from($imageTable, 'i')
+            ->where('i.name = ?')
+            ->setParameter(0, $name, $type);
+
+        $image = $query->getResults();
+
+        return $image === [] ? null : $image[0][$imageTable];
+    }
+
+    private function findOrCreateImage(Image $image, Record $record) : string
+    {
+        $result = $this->findImage($image->name);
 
         if ($result === null) {
+            $image = $image->all();
+            //$image['first_appeared_on'] = $record->date;
+            //$image['last_appeared_on'] = $record->date;
             return $this->insertImage($image);
         }
 
-        if ($image['copyright'] !== $result['copyright'] || $image['wp'] !== $result['wp']) {
-            throw new UnexpectedValueException('Image does not match the existing one');
-        }
+        $pointer = new DoctrineImagePointer($this, $result);
+        $this->referExistingImage($pointer, $image, $record);
 
-        return $image['id'];
+        return $result['id'];
     }
 
-    public function save(array $data)
+    public function save(Record $record, Image $image) : void
     {
-        $imageName = $data['image']['name'];
         $this->conn->beginTransaction();
 
         try {
-            $data['image_id'] = $this->getImageId($data['image']);
-            unset($data['image']);
-            $id = $this->saveArchive($data);
+            $imageId = $this->findOrCreateImage($image, $record);
+            $data = $record->all();
+            $data['image_id'] = $imageId;
+            $this->saveRecord($data);
         } catch (Throwable $e) {
             $this->conn->rollBack();
             throw new RuntimeException(
                 sprintf(
                     'Failed to save result of market "%s" on "%s" with image "%s"',
-                    $data['market'],
-                    $data['date']->format('Y-m-d'),
-                    $imageName
+                    $record->market,
+                    $record->date->get()->format('Y/n/j'),
+                    $image->name
                 ), 0, $e
             );
         }
 
         $this->conn->commit();
-
-        return $id;
     }
 
-    public function getArchive(string $market, DateTimeImmutable $date)
+    public function getRecord(string $market, Date $date) : RecordView
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->archiveTable, $this->archiveTable->getAllColumns(), 'a');
+        $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
-        [$market, $marketType] = $this->archiveTable->getQueryParam('market', $market);
-        [$date, $dateType] = $this->archiveTable->getQueryParam('date_', $date);
+        [$market, $marketType] = $this->recordTable->getQueryParam('market', $market);
+        [$date, $dateType] = $this->recordTable->getQueryParam('date_', $date);
+
         $query
             ->getBuilder()
-            ->from($archiveTable, 'a')
-            ->join('a', $imageTable, 'i', 'a.image_id = i.id')
-            ->where('a.market = ?', 'a.date_ = ?')
+            ->from($recordTable, 'r')
+            ->join('r', $imageTable, 'i', 'r.image_id = i.id')
+            ->where('r.market = ?', 'r.date_ = ?')
             ->setMaxResults(1)
             ->setParameters([$market, $date], [$marketType, $dateType]);
-        $results = $query->getData();
-        if ($results === []) {
-            throw new NotFoundException('Archive not found');
+
+        $record = $query->getData();
+
+        if ($record === []) {
+            throw NotFoundException::record($market, $date);
         }
-        $archive = $results[0][$archiveTable];
-        $archive['image'] = $results[0][$imageTable];
-        return $archive;
+
+        $image = new Image($record[0][$imageTable]);
+        $record = $record[0][$recordTable];
+        $record['image'] = $image;
+
+        return new RecordView($record);
     }
 
-    public function getImage(string $name)
+    public function getImage(string $name) : ImageView
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->archiveTable, $this->archiveTable->getAllColumns(), 'a');
+        $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
         [$name, $type] = $this->imageTable->getQueryParam('name', $name);
+
         $query
             ->getBuilder()
             ->from($imageTable, 'i')
-            ->leftJoin('i', $archiveTable, 'a', 'i.id = a.image_id')
+            ->leftJoin('i', $recordTable, 'r', 'i.id = r.image_id')
             ->where('i.name = ?')
-            ->orderBy('a.date_', 'DESC')
+            ->orderBy('r.date_', 'DESC')
             ->setParameter(0, $name, $type);
+
         $results = $query->getData();
+
         if ($results === []) {
-            throw new NotFoundException('Image not found');
+            throw NotFoundException::image($name);
         }
+
         $image = $results[0][$imageTable];
-        $image['archives'] = array_column($results, $archiveTable);
-        return $image;
+        $image['records'] = array_column($results, $recordTable);
+
+        return new ImageView($image);
     }
 
-    public function listImages(int $limit, int $page)
+    public function listImages(int $limit, int $skip = 0) : array
     {
-        $skip = $this->getSkip($limit, $page);
         $query = new SelectQuery($this->conn);
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns());
+
         $query
             ->getBuilder()
             ->from($imageTable)
             ->orderBy('id', 'DESC')
             ->setFirstResult($skip)
             ->setMaxResults($limit);
-        $results = $query->getData();
-        if ($results === []) {
-            throw new NotFoundException('No images found');
+
+        $images = $query->getData();
+
+        if ($images === []) {
+            throw NotFoundException::images();
         }
 
-        return array_column($results, $imageTable);
+        foreach ($images as $i => $result) {
+            $images[$i] = new Image($result[$imageTable]);
+        }
+
+        return $images;
     }
 
-    public function findArchivesByDate(DateTimeImmutable $date)
+    public function findImagesByDate(Date $date) : array
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->archiveTable, $this->archiveTable->getAllColumns(), 'a');
+        $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
-        [$date, $type] = $this->archiveTable->getQueryParam('date_', $date);
+        [$date, $type] = $this->recordTable->getQueryParam('date_', $date);
+
         $query
             ->getBuilder()
-            ->from($archiveTable, 'a')
-            ->join('a', $imageTable, 'i', 'a.image_id = i.id')
-            ->where('a.date_ = ?')
-            ->orderBy('a.market')
+            ->from($recordTable, 'r')
+            ->join('r', $imageTable, 'i', 'r.image_id = i.id')
+            ->where('r.date_ = ?')
+            ->orderBy('r.market')
             ->setParameter(0, $date, $type);
+
         $results = $query->getData();
+
         if ($results === []) {
-            throw new NotFoundException('No archives found');
+            throw NotFoundException::date($date);
         }
+
         $images = [];
 
         foreach ($results as $i => $result) {
-            $imageId = $result[$imageTable]['id'];
+            $image = $result[$imageTable];
+            $name = $image['name'];
 
-            if (!isset($images[$imageId])) {
-                $images[$imageId] = $result[$imageTable];
+            if (!isset($images[$name])) {
+                $images[$name] = $image;
             }
 
-            $images[$imageId]['archives'][] = $result[$archiveTable];
+            $images[$name]['records'][] = new Record($result[$recordTable]);
+        }
+
+        foreach ($images as $name => $image) {
+            $images[] = new ImageView($image);
+            unset($images[$name]);
         }
 
         return $images;
@@ -243,39 +295,63 @@ class DoctrineRepository implements SchemaProviderInterface
     {
         $query = new SelectQuery($this->conn);
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns());
+
         $query
             ->getBuilder()
             ->from($imageTable)
             ->setFirstResult($skip)
             ->setMaxResults($limit);
+
         $results = $query->getData();
+
         return array_column($results, $imageTable);
     }
 
-    public function exportArchives(int $skip, int $limit)
+    public function exportImageDates(int $skip, int $limit)
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->archiveTable, $this->archiveTable->getAllColumns());
+        $imageTable = $query->addTable($this->imageTable, ['id', 'last_appeared_on', 'first_appeared_on']);
+
         $query
             ->getBuilder()
-            ->from($archiveTable)
+            ->from($imageTable)
             ->setFirstResult($skip)
             ->setMaxResults($limit);
+
+        $results = $query->getResults();
+
+        return array_column($results, $imageTable);
+    }
+
+    public function exportRecords(int $skip, int $limit)
+    {
+        $query = new SelectQuery($this->conn);
+        $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns());
+
+        $query
+            ->getBuilder()
+            ->from($recordTable)
+            ->setFirstResult($skip)
+            ->setMaxResults($limit);
+
         $results = $query->getData();
-        return array_column($results, $archiveTable);
+
+        return array_column($results, $recordTable);
     }
 
     public function findMarketsHaveArchiveOfDate(DateTimeImmutable $date, array $markets)
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->archiveTable, ['market']);
-        [$date, $dateType] = $this->archiveTable->getQueryParam('date_', $date);
-        [$markets, $marketType] = $this->archiveTable->getArrayParam('market', $markets);
+        $archiveTable = $query->addTable($this->recordTable, ['market']);
+        [$date, $dateType] = $this->recordTable->getQueryParam('date_', $date);
+        [$markets, $marketType] = $this->recordTable->getArrayParam('market', $markets);
+
         $query
             ->getBuilder()
             ->from($archiveTable)
             ->where('date_ = ?', 'market IN (?)')
             ->setParameters([$date, $markets], [$dateType, $marketType]);
+
         $results = [];
 
         foreach ($query->getResults() as $result) {
@@ -283,10 +359,5 @@ class DoctrineRepository implements SchemaProviderInterface
         }
 
         return $results;
-    }
-
-    public function findImage(string $name) : ?ImagePointer
-    {
-        // TODO: Implement findImage() method.
     }
 }

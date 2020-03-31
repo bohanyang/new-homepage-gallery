@@ -3,10 +3,10 @@
 namespace App\Repository\LeanCloud;
 
 use App\Model\Date;
-use App\Repository\ImagePointer;
+use App\Repository\ImagePointerInterface;
 use LeanCloud\LeanObject;
 
-final class Image extends LeanObject implements ImagePointer
+final class Image extends LeanObject implements ImagePointerInterface
 {
     use LeanObjectTrait;
 
@@ -17,7 +17,7 @@ final class Image extends LeanObject implements ImagePointer
     public function toModelParams() : array
     {
         $data = $this->getData();
-        unset($data['available']);
+        unset($data['available'], $data['lastAppearedOn'], $data['firstAppearedOn']);
 
         return $data;
     }
@@ -36,15 +36,23 @@ final class Image extends LeanObject implements ImagePointer
     {
         $date = $this->get('lastAppearedOn');
 
-        if ($date === null) {
-            return $date;
-        }
+        return $date === null ? $date : Date::createFromUTC($date);
+    }
 
-        return Date::createFromUTC($date);
+    public function getFirstAppearedOn() : ?Date
+    {
+        $date = $this->get('firstAppearedOn');
+
+        return $date === null ? $date : Date::createFromUTC($date);
     }
 
     public function setLastAppearedOn(Date $date) : void
     {
         $this->set('lastAppearedOn', $date->get());
+    }
+
+    public function setFirstAppearedOn(Date $date) : void
+    {
+        $this->set('firstAppearedOn', $date->get());
     }
 }
