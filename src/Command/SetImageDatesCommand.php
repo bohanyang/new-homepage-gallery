@@ -15,14 +15,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class SetImageDatesCommand extends Command
 {
-    /**
-     * @var DoctrineRepository
-     */
-    private DoctrineRepository $doctrine;
-    /**
-     * @var LeanCloudRepository
-     */
-    private LeanCloudRepository $leancloud;
+    /** @var DoctrineRepository */
+    private $doctrine;
+    
+    /** @var LeanCloudRepository */
+    private $leancloud;
 
     public function __construct(DoctrineRepository $doctrine, LeanCloudRepository $leancloud)
     {
