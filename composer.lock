@@ -80,7 +80,7 @@
             "source": {
                 "type": "git",
                 "url": "https://e.coding.net/brent/bing-wallpaper.git",
-                "reference": "02b45a567c078d653f3acd19d258d9829948778c"
+                "reference": "22adb5d511df87b62212a678b4ac8157747e80ae"
             },
             "require": {
                 "beberlei/assert": "^3.2",
@@ -98,7 +98,7 @@
                     "BohanYang\\BingWallpaper\\": "src/"
                 }
             },
-            "time": "2020-04-01T06:58:07+00:00"
+            "time": "2020-04-01T08:54:02+00:00"
         },
         {
             "name": "doctrine/annotations",

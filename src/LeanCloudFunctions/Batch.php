@@ -4,19 +4,21 @@ namespace App\LeanCloudFunctions;
 
 use App\Collector;
 use LeanCloud\Client;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
-class Batch
+class Batch implements ServiceSubscriberInterface
 {
-    /** @var Collector */
-    private $collector;
+    /** @var ContainerInterface */
+    private $container;
 
     /** @var LoggerInterface */
     private  $logger;
 
-    public function __construct(Collector $collector, LoggerInterface $logger)
+    public function __construct(ContainerInterface $container, LoggerInterface $logger)
     {
-        $this->collector = $collector;
+        $this->container = $container;
         $this->logger = $logger;
     }
 
@@ -26,12 +28,22 @@ class Batch
             return 'No session token';
         }
 
+        $collector = $this->container->get('collector');
         Client::getStorage()->set('LC_SessionToken', $params['sessionToken']);
 
         $this->logger->notice('Start collect');
-
-        $this->collector->collect();
+        $collector->collect();
 
         return 'OK';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getSubscribedServices()
+    {
+        return [
+            'collector' => Collector::class
+        ];
     }
 }

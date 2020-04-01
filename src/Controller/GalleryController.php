@@ -10,8 +10,10 @@ use App\Repository\LeanCloudRepository;
 use App\Repository\NotFoundException;
 use App\Repository\RepositoryInterface;
 use App\Settings;
+use BohanYang\BingWallpaper\Market;
 use DateTimeZone;
 use League\Uri\UriString;
+use Safe\DateTime;
 use Safe\DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -21,10 +23,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 final class GalleryController extends AbstractController
 {
-    private const TZ = 'Asia/Shanghai';
     private const DATE_STRING_FORMAT = 'Ymd';
-    private const EXPIRE_TIME = '16:04';
-    private const PUBLISH_TIME = '16:05';
     private const DEFAULT_MARKET = 'zh-CN';
     private const FLAGS = [
         'zh-CN' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46198a0f5.png',
@@ -39,9 +38,6 @@ final class GalleryController extends AbstractController
         'fr-CA' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe478326de0.png',
         'en-IN' => 'https://cdn.jsdelivr.net/gh/brentybh/homepage-gallery@5f92ffa5957159a5810d70a646ff7e805a98c4dd/assets/images/5bfe46191fbec.png'
     ];
-
-    /** @var DateTimeZone */
-    private $tz;
 
     /** @var RepositoryInterface */
     private $repository;
@@ -61,7 +57,6 @@ final class GalleryController extends AbstractController
         Settings $settings,
         ContainerBagInterface $params
     ) {
-        $this->tz = new DateTimeZone(self::TZ);
         $this->repository = $repository;
         $this->cache = $cache;
         $this->settings = $settings;
@@ -95,7 +90,7 @@ final class GalleryController extends AbstractController
             $image = $this->cache->get(
                 "image.$name",
                 function (ItemInterface $item) use ($name) {
-                    $this->expiresAt($item);
+                    $this->expireNextHour($item);
 
                     return $this->repository->getImage($name);
                 }
@@ -131,7 +126,7 @@ final class GalleryController extends AbstractController
             $images = $this->cache->get(
                 "browse.$page",
                 function (ItemInterface $item) use ($limit, $skip) {
-                    $this->expiresAt($item);
+                    $this->expireNextHour($item);
 
                     return $this->repository->listImages($limit, $skip);
                 }
@@ -161,7 +156,7 @@ final class GalleryController extends AbstractController
             $images = $this->cache->get(
                 "date.{$date['current']}",
                 function (ItemInterface $item) use ($date) {
-                    $this->expiresAt($item);
+                    $this->expireNextHour($item);
 
                     return $this->repository->findImagesByDate(Date::createFromYmd($date['current']));
                 }
@@ -188,24 +183,23 @@ final class GalleryController extends AbstractController
             $market = self::DEFAULT_MARKET;
         }
 
-        if ($date === '') {
-            $now = new DateTimeImmutable('now', $this->tz);
-            $todayPublishTime = new DateTimeImmutable(self::PUBLISH_TIME, $this->tz);
-            $todayIsPublished = $now > $todayPublishTime;
-            $date = $todayIsPublished ? $now : new DateTimeImmutable('yesterday', $this->tz);
-            $date = $date->format(self::DATE_STRING_FORMAT);
-        }
+        $market = new Market($market);
+        $timezone = $market->getTimeZone();
 
-        $date = $this->getDateStringInfo($date);
+        if ($date === '') {
+            $date = $this->getTodayInfo($timezone);
+        } else {
+            $date = $this->getDateStringInfo($date, $timezone);
+        }
 
         try {
             /** @var RecordView $record */
             $record = $this->cache->get(
                 "archive.${market}.{$date['current']}",
                 function (ItemInterface $item) use ($market, $date) {
-                    $this->expiresAt($item);
+                    $this->expireTomorrow($item, $market->getTimeZone());
 
-                    return $this->repository->getRecord($market, Date::createFromYmd($date['current']));
+                    return $this->repository->getRecord($market->getName(), Date::createFromYmd($date['current']));
                 }
             );
         } catch (NotFoundException $e) {
@@ -225,38 +219,62 @@ final class GalleryController extends AbstractController
         );
     }
 
-    private function expiresAt(ItemInterface $item)
+    private function expireNextHour(ItemInterface $item)
     {
-        $now = new DateTimeImmutable('now', $this->tz);
-        $expiresAt = new DateTimeImmutable(self::EXPIRE_TIME, $this->tz);
+        $time = new DateTime('next hour', new DateTimeZone('UTC'));
+        $time->setTime($time->format('G'), 4);
 
-        if ($expiresAt < $now) {
-            $expiresAt = new DateTimeImmutable('tomorrow ' . self::EXPIRE_TIME, $this->tz);
-        }
-
-        return $item->expiresAt($expiresAt);
+        return $item->expiresAt($time);
     }
 
-    private function getDateStringInfo(string $dateString)
+    private function expireTomorrow(ItemInterface $item, DateTimeZone $timezone)
     {
-        $date = DateTimeImmutable::createFromFormat(self::DATE_STRING_FORMAT, $dateString, $this->tz);
-        $date = $date->modify(self::PUBLISH_TIME);
-        $previous = $date->modify('-1 day')->format(self::DATE_STRING_FORMAT);
-        $now = new DateTimeImmutable('now', $this->tz);
-        $old = ((int) $now->diff($date, false)->format('%r%a')) < 0;
-        $return = [
-            'object' => $date,
-            'old' => $old,
-            'current' => $dateString,
-            'previous' => $previous
-        ];
+        $now = new DateTimeImmutable('now', $timezone);
+        $delay = $now->setTime(0, 4);
 
-        if ($old) {
-            $next = $date->modify('+1 day')->format(self::DATE_STRING_FORMAT);
-            $return['next'] = $next;
+        if ($now < $delay) {
+            return $item->expiresAt($delay);
         }
 
-        return $return;
+        return $item->expiresAt($delay->modify('+1 day'));
+    }
+
+    private function getTodayInfo(DateTimeZone $timezone)
+    {
+        $now = new DateTimeImmutable('now', $timezone);
+        $delay = $now->setTime(0, 3);
+
+        if ($now < $delay) {
+            $now = $now->modify('yesterday');
+        } else {
+            $now = $now->setTime(0, 0);
+        }
+
+        return [
+            'object' => $now,
+            'old' => false,
+            'current' => $now->format(self::DATE_STRING_FORMAT),
+            'previous' => $now->modify('yesterday')->format(self::DATE_STRING_FORMAT)
+        ];
+    }
+
+    private function getDateStringInfo(string $string, DateTimeZone $timezone)
+    {
+        $date = DateTimeImmutable::createFromFormat('!' . self::DATE_STRING_FORMAT, $string, $timezone);
+        $now = new DateTimeImmutable('now', $timezone);
+        $delay = $date->modify('tomorrow 00:03');
+        $result = [
+            'object' => $date,
+            'old' => $now >= $delay,
+            'current' => $string,
+            'previous' => $date->modify('yesterday')->format(self::DATE_STRING_FORMAT)
+        ];
+
+        if ($result['old']) {
+            $result['next'] = $date->modify('tomorrow')->format(self::DATE_STRING_FORMAT);
+        }
+
+        return $result;
     }
 
     private function getVideoUrl($image)

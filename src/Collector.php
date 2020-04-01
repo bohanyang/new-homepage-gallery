@@ -62,11 +62,12 @@ class Collector
         $markets = $now->getMarketsHaveBecomeTheLaterDate($markets);
         $date = $now->getTheLaterDate();
         $requests = array_keys($markets);
-        $this->logger->debug('Available: ' . json_encode($requests));
+        $this->logger->debug('Date ' . $date->format('Y/n/j'));
+        $this->logger->debug('Available', $requests);
         $existing = $this->repository->findMarketsHaveRecordOn(Date::createFromLocal($date), $requests);
-        $this->logger->debug('Existing: ' . json_encode($existing));
+        $this->logger->debug('Existing', $existing);
         $requests = array_diff($requests, $existing);
-        $this->logger->debug('Requests: ' . json_encode($requests));
+        $this->logger->debug('Requests', $requests);
         foreach ($requests as $i => $market) {
             $requests[$i] = RequestParams::create($markets[$market], $date);
         }
