@@ -221,16 +221,20 @@ final class GalleryController extends AbstractController
 
     private function expireNextHour(ItemInterface $item)
     {
-        $time = new DateTime('next hour', new DateTimeZone('UTC'));
-        $time->setTime($time->format('G'), 4);
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $delay = $now->setTime($now->format('G'), 3, 1);
 
-        return $item->expiresAt($time);
+        if ($now < $delay) {
+            return $item->expiresAt($delay);
+        }
+
+        return $item->expiresAt($delay->modify('+1 hour'));
     }
 
     private function expireTomorrow(ItemInterface $item, DateTimeZone $timezone)
     {
         $now = new DateTimeImmutable('now', $timezone);
-        $delay = $now->setTime(0, 4);
+        $delay = $now->setTime(0, 3, 1);
 
         if ($now < $delay) {
             return $item->expiresAt($delay);
