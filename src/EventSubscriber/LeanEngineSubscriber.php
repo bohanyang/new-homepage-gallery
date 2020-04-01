@@ -78,7 +78,7 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
 
     public function defineCloudFunctions()
     {
-        $functions = ['clear_cache', 'batch'];
+        $functions = ['clear_cache', 'batch', 'wake_up'];
 
         foreach ($functions as $name) {
             Cloud::define(
