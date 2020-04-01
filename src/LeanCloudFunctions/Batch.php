@@ -22,11 +22,11 @@ class Batch
 
     public function __invoke(array $params)
     {
-        if (!isset($params['session_token'])) {
+        if (!isset($params['sessionToken'])) {
             return 'No session token';
         }
 
-        Client::getStorage()->set('session_token', $params['session_token']);
+        Client::getStorage()->set('LC_SessionToken', $params['sessionToken']);
 
         $this->logger->notice('Start collect');
 
