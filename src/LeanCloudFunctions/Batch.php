@@ -4,15 +4,20 @@ namespace App\LeanCloudFunctions;
 
 use App\Collector;
 use LeanCloud\Client;
+use Psr\Log\LoggerInterface;
 
 class Batch
 {
     /** @var Collector */
     private $collector;
 
-    public function __construct(Collector $collector)
+    /** @var LoggerInterface */
+    private  $logger;
+
+    public function __construct(Collector $collector, LoggerInterface $logger)
     {
         $this->collector = $collector;
+        $this->logger = $logger;
     }
 
     public function __invoke(array $params)
@@ -22,6 +27,8 @@ class Batch
         }
 
         Client::getStorage()->set('session_token', $params['session_token']);
+
+        $this->logger->notice('Start collect');
 
         $this->collector->collect();
 
