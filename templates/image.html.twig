@@ -24,9 +24,9 @@
                 {% for record in image.records %}
                     <tr>
                         <td>
-                            <a href="{{ path('archive', {market: record.market, date: record.date.get|date(date_format)}) }}">
+                            <a href="{{ path('archive', {market: record.market, date: record.date.get|date(date_format, false)}) }}">
                                 <img class="flag" src="{{ attribute(flags, record.market) }}" alt="{{ record.market }}">
-                                {{ record.date.get|date('Y/n/j') }}
+                                {{ record.date.get|date('Y/n/j', false) }}
                             </a>
                         </td>
                     </tr>
