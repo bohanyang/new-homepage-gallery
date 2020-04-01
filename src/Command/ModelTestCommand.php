@@ -15,10 +15,8 @@ use Throwable;
 class ModelTestCommand extends Command
 {
 
-    /**
-     * @var DoctrineRepository
-     */
-    private DoctrineRepository $repository;
+    /** @var DoctrineRepository */
+    private $repository;
 
     public function __construct(DoctrineRepository $repository)
     {
