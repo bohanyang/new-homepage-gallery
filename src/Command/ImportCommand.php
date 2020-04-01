@@ -15,10 +15,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class ImportCommand extends Command
 {
 
-    /**
-     * @var LeanCloudDoctrineReplicator
-     */
-    private LeanCloudDoctrineReplicator $replicator;
+    /** @var LeanCloudDoctrineReplicator */
+    private $replicator;
 
     public function __construct(LeanCloudDoctrineReplicator $replicator)
     {

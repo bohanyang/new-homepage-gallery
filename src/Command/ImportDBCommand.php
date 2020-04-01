@@ -10,14 +10,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ImportDBCommand extends Command
 {
-    /**
-     * @var DoctrineRepository
-     */
-    private DoctrineRepository $source;
-    /**
-     * @var DoctrineRepository
-     */
-    private DoctrineRepository $destination;
+    /** @var DoctrineRepository */
+    private $source;
+    
+    /** @var DoctrineRepository */
+    private $destination;
 
     public function __construct(DoctrineRepository $postgres, DoctrineRepository $sqlite)
     {
