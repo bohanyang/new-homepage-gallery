@@ -79,10 +79,6 @@
         "0": {
             "type": "vcs",
             "url": "https://e.coding.net/brent/bing-wallpaper.git"
-        },
-        "packagist": {
-            "type": "composer",
-            "url": "https://mirrors.aliyun.com/composer/"
         }
     }
 }
