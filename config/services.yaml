@@ -5,9 +5,10 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     env(LEANCLOUD_APP_MASTER_KEY): ~
-    env(LEANCLOUD_API_SERVER): ~
-    env(LEANCLOUD_APP_ENV): ~
     env(LEANCLOUD_REGION): ~
+    env(LEANCLOUD_API_SERVER): ~
+    env(LEANCLOUD_SESSION_TOKEN): ~
+    env(LEANCLOUD_APP_ENV): ~
     env(APP_IMAGE_ORIGIN): ~
     env(APP_VIDEO_ORIGIN): ~
     env(GEO_REDIRECT_DESTINATION): ~
@@ -36,17 +37,20 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Repository\RepositoryContract:
+    App\Repository\RepositoryInterface:
         alias: 'App\Repository\LeanCloudRepository'
 
-    App\Repository\LeanCloudRepository:
+    App\LeanCloud:
         arguments:
             - '%env(LEANCLOUD_APP_ID)%'
             - '%env(LEANCLOUD_APP_KEY)%'
             - '%env(LEANCLOUD_APP_MASTER_KEY)%'
-            - '%env(LEANCLOUD_API_SERVER)%'
-            - '%env(LEANCLOUD_APP_ENV)%'
+            - ~
             - '%env(LEANCLOUD_REGION)%'
+            - '%env(LEANCLOUD_API_SERVER)%'
+            - ~
+            - '%env(LEANCLOUD_SESSION_TOKEN)%'
+            - '%env(LEANCLOUD_APP_ENV)%'
             - '%kernel.environment%'
             - '%kernel.debug%'
 
@@ -66,6 +70,28 @@ services:
     App\GeoIP\CheckerInterface:
         alias: 'App\GeoIP\IpVersionSplitter'
 
+    doctrine_migrations.diff_command:
+        class: 'Doctrine\Bundle\MigrationsBundle\Command\MigrationsDiffDoctrineCommand'
+        arguments: ['@App\Repository\DoctrineRepository']
+        tags: ['console.command']
+
     OTPHP\TOTPInterface:
         factory: ['OTPHP\TOTP', 'create']
         arguments: ['%env(TOTP_SECRET)%']
+
+    BohanYang\BingWallpaper\Client:
+        class: BohanYang\BingWallpaper\Client
+        arguments:
+            - 'https://global.bing.com/HPImageArchive.aspx'
+            - '@monolog.logger'
+
+#    doctrine_repository.postgres:
+#        class: App\Repository\DoctrineRepository
+#        arguments:
+#            - '@doctrine.dbal.postgres_connection'
+#
+#    App\Command\ImportDBCommand:
+#        $postgres: '@doctrine_repository.postgres'
+
+    App\Collector:
+        $repository: '@App\Repository\LeanCloudRepository'

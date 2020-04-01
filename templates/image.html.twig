@@ -5,16 +5,14 @@
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
-            <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}"
-                 class="img-rounded wallpaper">
+            <img src="{{ image_origin }}{{ image.urlbase }}_{{ image_size }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
         </div>
         <div class="col-xs-12">
-            <button type="button" class="btn btn-link btn-block" data-toggle="modal"
-                    data-target="#about-image">{{ 'download_image'|trans }}</button>
+            <button type="button" class="btn btn-link btn-block" data-toggle="modal" data-target="#about-image">{{ 'download_image'|trans }}</button>
         </div>
-        {% if video is not null %}
+        {% if video_url is not null %}
             <div class="col-xs-12">
-                <a class="btn btn-link btn-block" href="{{ video }}" target="_blank">
+                <a class="btn btn-link btn-block" href="{{ video_url }}" target="_blank">
                     <strong>{{ 'play_video'|trans }}</strong>
                 </a>
             </div>
@@ -23,24 +21,24 @@
     <div class="row">
         <div class="col-xs-12">
             <table class="table table-striped">
-                {% for archive in image.archives %}
+                {% for record in image.records %}
                     <tr>
                         <td>
-                            <a href="{{ path('archive', {market: archive.market, date: archive.date|date(dateStringFormat)}) }}">
-                                <img class="flag" src="{{ attribute(flags, archive.market) }}" alt="{{ archive.market }}">
-                                {{ archive.date|date('Y/n/j') }}
+                            <a href="{{ path('archive', {market: record.market, date: record.date.get|date(date_format, false)}) }}">
+                                <img class="flag" src="{{ attribute(flags, record.market) }}" alt="{{ record.market }}">
+                                {{ record.date.get|date('Y/n/j', false) }}
                             </a>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <span lang="{{ archive.market }}">
-                                {% if archive.link is defined %}
-                                    <a href="{{ archive.link }}" target="_blank" rel="nofollow">
-                                        {{ archive.description }}
+                            <span lang="{{ record.market }}">
+                                {% if record.link is defined %}
+                                    <a href="{{ record.link }}" target="_blank" rel="nofollow">
+                                        {{ record.description }}
                                     </a>
                                 {% else %}
-                                    <span class="text-link">{{ archive.description }}</span>
+                                    <span class="text-link">{{ record.description }}</span>
                                 {% endif %}
                             </span>
                         </td>

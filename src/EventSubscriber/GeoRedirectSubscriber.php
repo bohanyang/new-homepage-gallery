@@ -54,7 +54,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSu
     {
         return [
             KernelEvents::REQUEST => [
-                ['onKernelRequest', -1]
+                ['onKernelRequest', -2]
             ]
         ];
     }

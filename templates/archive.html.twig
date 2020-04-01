@@ -1,14 +1,14 @@
 {% extends "base.html.twig" %}
 
-{% set formattedDate = date.object|date('Y/n/j') %}
+{% set formattedDate = date.object|date('Y/n/j', false) %}
 
-{% block title %}{{ archive.description }}{% endblock %}
+{% block title %}{{ record.description }}{% endblock %}
 
 {% block body %}
     <div class="row">
         <div class="col-xs-12">
-            <a href="{{ path('image', {name: image.name}) }}"><img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg"
-                                                                   alt="{{ archive.description }}"
+            <a href="{{ path('image', {name: image.name}) }}"><img src="{{ image_origin }}{{ image.urlbase }}_{{ image_size }}.jpg"
+                                                                   alt="{{ record.description }}"
                                                                    class="img-rounded wallpaper"></a>
         </div>
         <div class="col-xs-12">
@@ -26,18 +26,18 @@
     <div class="row">
         <div class="col-xs-12 col-md-6 pgr">
             <a href="{{ path('date', {date: date.current}) }}"
-               class="btn btn-embossed btn-primary btn-lg btn-block">{{ ('markets.' ~ archive.market) | trans }}
+               class="btn btn-embossed btn-primary btn-lg btn-block">{{ ('markets.' ~ record.market) | trans }}
                 ({{ formattedDate }})</a>
         </div>
         <div class="col-xs-6 col-md-3 pgr">
-            <a href="{{ path('archive', {market: archive.market, date: date.previous}) }}"
+            <a href="{{ path('archive', {market: record.market, date: date.previous}) }}"
                class="btn btn-embossed btn-primary btn-lg btn-block">
                 <i class="fui-arrow-left"></i>
             </a>
         </div>
         <div class="col-xs-6 col-md-3 pgr">
             {% if date.old %}
-                <a href="{{ path('archive', {market: archive.market, date: date.next}) }}"
+                <a href="{{ path('archive', {market: record.market, date: date.next}) }}"
                    class="btn btn-embossed btn-primary btn-lg btn-block">
                     <i class="fui-arrow-right"></i>
                 </a>
@@ -48,14 +48,14 @@
             {% endif %}
         </div>
     </div>
-    {% if archive.cs is defined %}
+    {% if record.coverstory is not null %}
         <div class="row">
-            <div class="col-xs-12 story" lang="{{ archive.market }}">
+            <div class="col-xs-12 story" lang="{{ record.market }}">
                 <blockquote>
                     <p>
-                        <strong>{{ archive.coverstory.attribute }}: {{ archive.coverstory.title }}</strong>
+                        <strong>{{ record.coverstory.attribute }}: {{ record.coverstory.title }}</strong>
                     </p>
-                    <p>{{ archive.coverstory.para1 }}</p>
+                    <p>{{ record.coverstory.para1 }}</p>
                 </blockquote>
             </div>
         </div>
@@ -65,22 +65,22 @@
             <table class="table table-striped">
                 <tr>
                     <td>
-                        <span lang="{{ archive.market }}">
-                            {% if archive.link is defined %}
-                                <a href="{{ archive.link }}" target="_blank" rel="nofollow">
-                                    <strong>{{ archive.description }}</strong>
+                        <span lang="{{ record.market }}">
+                            {% if record.link is not null %}
+                                <a href="{{ record.link }}" target="_blank" rel="nofollow">
+                                    <strong>{{ record.description }}</strong>
                                 </a>
                             {% else %}
-                                <span class="text-link"><strong>{{ archive.description }}</strong></span>
+                                <span class="text-link"><strong>{{ record.description }}</strong></span>
                             {% endif %}
                         </span>
                     </td>
                 </tr>
-                {% if archive.hotspots is defined %}
-                    {% for hotspot in archive.hotspots %}
+                {% if record.hotspots is not null %}
+                    {% for hotspot in record.hotspots %}
                         <tr>
                             <td>
-                                <span lang="{{ archive.market }}">
+                                <span lang="{{ record.market }}">
                                     {{ hotspot.desc }}
                                     <a href="{{ hotspot.link }}" target="_blank" rel="nofollow">
                                         <strong>{{ hotspot.query }}</strong>
@@ -90,11 +90,11 @@
                         </tr>
                     {% endfor %}
                 {% endif %}
-                {% if archive.messages is defined %}
-                    {% for message in archive.messages %}
+                {% if record.messages is not null %}
+                    {% for message in record.messages %}
                         <tr>
                             <td>
-                                <span lang="{{ archive.market }}">
+                                <span lang="{{ record.market }}">
                                     {{ message.title }}
                                     <a href="{{ message.link }}" target="_blank" rel="nofollow">
                                         <strong>{{ message.text }}</strong>
