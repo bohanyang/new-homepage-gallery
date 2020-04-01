@@ -9,16 +9,16 @@
         </div>
     </div>
     {% for image in images %}
-        {% set imagePage = path('image', {name: image.name}) %}
+        {% set image_page = path('image', {name: image.name}) %}
         <div class="row">
             <div class="col-xs-12">
-                <a href="{{ imagePage }}">
-                    <img src="{{ mirror }}{{ image.urlbase }}_{{ res }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
+                <a href="{{ image_page }}">
+                    <img src="{{ image_origin }}{{ image.urlbase }}_{{ image_size }}.jpg" alt="{{ image.name }}" class="img-rounded wallpaper">
                 </a>
             </div>
             <div class="col-xs-12">
                 <p class="text-left">
-                    <a href="{{ imagePage }}">{{ image.name }}</a>
+                    <a href="{{ image_page }}">{{ image.name }}</a>
                 </p>
             </div>
         </div>

@@ -2,6 +2,9 @@
     "beberlei/assert": {
         "version": "v3.2.7"
     },
+    "brentybh/bing-wallpaper": {
+        "version": "dev-master"
+    },
     "doctrine/annotations": {
         "version": "1.0",
         "recipe": {
@@ -90,6 +93,15 @@
             "./config/packages/dev/easy_log_handler.yaml"
         ]
     },
+    "guzzlehttp/guzzle": {
+        "version": "6.5.2"
+    },
+    "guzzlehttp/promises": {
+        "version": "v1.3.1"
+    },
+    "guzzlehttp/psr7": {
+        "version": "1.6.1"
+    },
     "ipip/db": {
         "version": "v1.0.0"
     },
@@ -153,6 +165,9 @@
     "psr/log": {
         "version": "1.1.2"
     },
+    "ralouphie/getallheaders": {
+        "version": "3.0.3"
+    },
     "sensiolabs/security-checker": {
         "version": "4.0",
         "recipe": {
@@ -164,6 +179,9 @@
         "files": [
             "./config/packages/security_checker.yaml"
         ]
+    },
+    "spatie/data-transfer-object": {
+        "version": "1.13.3"
     },
     "spomky-labs/otphp": {
         "version": "v10.0.1"
