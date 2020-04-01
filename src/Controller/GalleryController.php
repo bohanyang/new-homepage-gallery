@@ -261,7 +261,6 @@ final class GalleryController extends AbstractController
     private function getDateStringInfo(string $string, DateTimeZone $timezone)
     {
         $date = DateTimeImmutable::createFromFormat('!' . self::DATE_STRING_FORMAT, $string, $timezone);
-        dump($date);
         $now = new DateTimeImmutable('now', $timezone);
         $delay = $date->modify('tomorrow 00:03');
         $result = [
