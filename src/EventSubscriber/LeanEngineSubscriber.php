@@ -5,6 +5,7 @@ namespace App\EventSubscriber;
 use App\LeanCloud;
 use App\LeanCloudFunctions\Batch;
 use App\LeanCloudFunctions\TestClearCache;
+use App\LeanCloudFunctions\WakeUp;
 use LeanCloud\Engine\Cloud;
 use LeanCloud\Engine\LeanEngine;
 use LeanCloud\User;
@@ -70,7 +71,8 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
     {
         return [
             'clear_cache' => TestClearCache::class,
-            'batch' => Batch::class
+            'batch' => Batch::class,
+            'wake_up' => WakeUp::class
         ];
     }
 
