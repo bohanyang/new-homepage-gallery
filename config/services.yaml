@@ -12,6 +12,8 @@ parameters:
     env(APP_IMAGE_ORIGIN): ~
     env(APP_VIDEO_ORIGIN): ~
     env(GEO_REDIRECT_DESTINATION): ~
+    env(IPDB_PATH): ~
+    env(MMDB_PATH): ~
     app.image_origin: '%env(APP_IMAGE_ORIGIN)%'
     app.video_origin: '%env(APP_VIDEO_ORIGIN)%'
     geo_redirect.destination: '%env(GEO_REDIRECT_DESTINATION)%'
@@ -56,11 +58,11 @@ services:
 
     ipip\db\Reader:
         arguments:
-            - '%kernel.project_dir%/share/ipipfree.ipdb'
+            - '%env(IPDB_PATH)%'
 
     MaxMind\Db\Reader:
         arguments:
-            - '%kernel.project_dir%/share/GeoLite2-Country.mmdb'
+            - '%env(MMDB_PATH)%'
 
     App\GeoIP\IpVersionSplitter:
         arguments:
