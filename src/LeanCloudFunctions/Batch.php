@@ -13,13 +13,9 @@ class Batch implements ServiceSubscriberInterface
     /** @var ContainerInterface */
     private $container;
 
-    /** @var LoggerInterface */
-    private  $logger;
-
-    public function __construct(ContainerInterface $container, LoggerInterface $logger)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->logger = $logger;
     }
 
     public function __invoke(array $params)
@@ -31,7 +27,6 @@ class Batch implements ServiceSubscriberInterface
         $collector = $this->container->get('collector');
         Client::getStorage()->set('LC_SessionToken', $params['sessionToken']);
 
-        $this->logger->notice('Start collect');
         $collector->collect();
 
         return 'OK';

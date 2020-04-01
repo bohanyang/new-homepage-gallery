@@ -77,7 +77,15 @@ class Collector
 
     public function collect() : void
     {
-        foreach ($this->client->batch($this->makeRequestParams()) as $result) {
+        $requests = $this->makeRequestParams();
+
+        if ($requests === []) {
+            return;
+        }
+
+        $this->logger->notice('Start collect');
+
+        foreach ($this->client->batch($requests) as $result) {
             $this->saveResult($result);
         }
     }
