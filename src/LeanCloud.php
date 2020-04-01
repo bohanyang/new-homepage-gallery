@@ -57,7 +57,7 @@ final class LeanCloud implements IStorage
 
         if ($sessionToken !== null) {
             Client::getStorage()->set('LC_SessionToken', $sessionToken);
-            User::become($sessionToken);
+            // User::become($sessionToken);
         }
     }
 

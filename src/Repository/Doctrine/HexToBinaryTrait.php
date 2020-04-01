@@ -11,9 +11,16 @@ use function Safe\stream_get_contents;
 
 trait HexToBinaryTrait
 {
+    protected function hex2bin(string $hex) : string
+    {
+        return hex2bin($hex);
+    }
+
     /**
      * @param string|resource $bin
      * @return string
+     * @throws \Safe\Exceptions\StreamException
+     * @throws \Safe\Exceptions\FilesystemException
      */
     protected function bin2hex($bin) : string
     {
@@ -25,10 +32,5 @@ trait HexToBinaryTrait
         }
 
         return bin2hex($bin);
-    }
-
-    protected function hex2bin(string $hex) : string
-    {
-        return hex2bin($hex);
     }
 }

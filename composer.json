@@ -82,11 +82,12 @@
     },
     "repositories": {
         "0": {
-            "type": "path",
-            "url": "../bing-wallpaper-git",
-            "options": {
-                "symlink": true
-            }
+            "type": "vcs",
+            "url": "git@e.coding.net:brent/bing-wallpaper.git"
+        },
+        "packagist": {
+            "type": "composer",
+            "url": "https://mirrors.aliyun.com/composer/"
         }
     }
 }

@@ -18,6 +18,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\Provider\SchemaProviderInterface;
 use MongoDB\BSON\ObjectId;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use UnexpectedValueException;
@@ -41,7 +42,10 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     /** @var AbstractPlatform */
     private $platform;
 
-    public function __construct(Connection $conn)
+    /** @var LoggerInterface */
+    private $logger;
+
+    public function __construct(Connection $conn, LoggerInterface $logger)
     {
         //$conn->getConfiguration()->setSQLLogger(null);
         $this->conn = $conn;
@@ -49,6 +53,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
         $serializer = new Serializer();
         $this->imageTable = new ImageTable($this->platform, $serializer);
         $this->recordTable = new RecordTable($this->platform, $serializer);
+        $this->logger = $logger;
     }
 
     public function createSchema() : Schema
@@ -294,7 +299,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     public function exportImages(int $skip, int $limit)
     {
         $query = new SelectQuery($this->conn);
-        $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns());
+        $imageTable = $query->addTable($this->imageTable, ['id', 'first_appeared_on', 'last_appeared_on', 'name', 'urlbase', 'copyright', 'wp', 'vid']);
 
         $query
             ->getBuilder()
@@ -302,7 +307,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setFirstResult($skip)
             ->setMaxResults($limit);
 
-        $results = $query->getData();
+        $results = $query->getResults();
 
         return array_column($results, $imageTable);
     }
@@ -326,7 +331,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     public function exportRecords(int $skip, int $limit)
     {
         $query = new SelectQuery($this->conn);
-        $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns());
+        $recordTable = $query->addTable($this->recordTable, ['id', 'image_id', 'market', 'date_', 'description', 'link', 'hotspots', 'messages', 'coverstory']);
 
         $query
             ->getBuilder()
@@ -339,23 +344,23 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
         return array_column($results, $recordTable);
     }
 
-    public function findMarketsHaveArchiveOfDate(DateTimeImmutable $date, array $markets)
+    public function findMarketsHaveRecordOn(Date $date, array $markets) : array
     {
         $query = new SelectQuery($this->conn);
-        $archiveTable = $query->addTable($this->recordTable, ['market']);
+        $recordTable = $query->addTable($this->recordTable, ['market']);
         [$date, $dateType] = $this->recordTable->getQueryParam('date_', $date);
         [$markets, $marketType] = $this->recordTable->getArrayParam('market', $markets);
 
         $query
             ->getBuilder()
-            ->from($archiveTable)
+            ->from($recordTable)
             ->where('date_ = ?', 'market IN (?)')
             ->setParameters([$date, $markets], [$dateType, $marketType]);
 
-        $results = [];
+        $results = $query->getResults();
 
-        foreach ($query->getResults() as $result) {
-            $results[] = $result[$archiveTable]['market'];
+        foreach ($results as $i => $result) {
+            $results[$i] = $result[$recordTable]['market'];
         }
 
         return $results;

@@ -13,20 +13,20 @@ class ImportDBCommand extends Command
     /**
      * @var DoctrineRepository
      */
-    private DoctrineRepository $repository;
+    private DoctrineRepository $source;
     /**
      * @var DoctrineRepository
      */
-    private DoctrineRepository $db;
+    private DoctrineRepository $destination;
 
-    public function __construct(DoctrineRepository $sqlite3, DoctrineRepository $db)
+    public function __construct(DoctrineRepository $postgres, DoctrineRepository $sqlite)
     {
         parent::__construct();
-        $this->repository = $db;
-        $this->db = $sqlite3;
+        $this->source = $postgres;
+        $this->destination = $sqlite;
     }
 
-    protected static $defaultName = 'app:importdb';
+    protected static $defaultName = 'app:import-db';
 
     protected function configure()
     {
@@ -36,13 +36,13 @@ class ImportDBCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $limit = 1000;
+        $limit = 10000;
         $skip = 0;
         do {
             $count = 0;
-            $results = $this->repository->exportImages($skip, $limit);
+            $results = $this->source->exportImages($skip, $limit);
             foreach ($results as $result) {
-                $this->db->insertImage($result);
+                $this->destination->insertImage($result);
                 $count++;
             }
             $skip = $skip + $count;
@@ -52,9 +52,9 @@ class ImportDBCommand extends Command
         $skip = 0;
         do {
             $count = 0;
-            $results = $this->repository->exportArchives($skip, $limit);
+            $results = $this->source->exportRecords($skip, $limit);
             foreach ($results as $result) {
-                $this->db->insertArchive($result);
+                $this->destination->insertRecord($result);
                 $count++;
             }
             $skip = $skip + $count;

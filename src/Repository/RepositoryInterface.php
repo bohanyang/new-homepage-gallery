@@ -21,4 +21,7 @@ interface RepositoryInterface
     public function findImagesByDate(Date $date) : array;
 
     public function save(Record $record, Image $image) : void;
+
+    /** @return string[] */
+    public function findMarketsHaveRecordOn(Date $date, array $markets) : array;
 }

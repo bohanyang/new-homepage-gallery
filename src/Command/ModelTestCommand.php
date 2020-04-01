@@ -2,27 +2,27 @@
 
 namespace App\Command;
 
-use App\Repository\LeanCloudRepository;
-use BohanYang\BingWallpaper\Client;
+use App\Repository\DoctrineRepository;
+use Exception;
+use MongoDB\BSON\ObjectId;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
-use function dump;
+use Throwable;
 
 class ModelTestCommand extends Command
 {
-    /** @var Client */
-    private $client;
 
-    /** @var LeanCloudRepository */
-    private $repository;
+    /**
+     * @var DoctrineRepository
+     */
+    private DoctrineRepository $repository;
 
-    public function __construct(Client $client, LeanCloudRepository $repository)
+    public function __construct(DoctrineRepository $repository)
     {
         parent::__construct();
-        $this->client = $client;
         $this->repository = $repository;
     }
 
@@ -36,8 +36,28 @@ class ModelTestCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $io = new SymfonyStyle($input, $output);
-        $model = $this->repository->getImage('LiRiverGuilinVideo');
-        dump($model);
+        $conn = $this->repository->getConnection();
+        $conn->beginTransaction();
+        try {
+            $this->repository->insertImage(
+                [
+                    'id' => (new ObjectId())->__toString(),
+                    'name' => 'TestImage',
+                    'copyright' => 'CopyRightTestImage',
+                    'urlbase' => 'UrlTestImage',
+                    'wp' => true
+                ]
+            );
+            if (!$io->confirm('Sure?', true)) {
+                //throw new RuntimeException('Aborted');
+                exit;
+            }
+        } catch (Throwable $e) {
+            $conn->rollBack();
+
+            throw $e;
+        }
+        $conn->commit();
         return 0;
     }
 }

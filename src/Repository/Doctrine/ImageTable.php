@@ -32,8 +32,8 @@ class ImageTable extends AbstractTable
         //'id' => ['length' => 12, 'fixed' => true, 'customSchemaOptions' => ['unique' => true]],
         'id' => ['length' => 12, 'fixed' => true],
         'name' => ['length' => 255],
-        'first_appeared_on' => ['notnull' => false],
-        'last_appeared_on' => ['notnull' => false],
+        //'first_appeared_on' => ['notnull' => false],
+        //'last_appeared_on' => ['notnull' => false],
         'urlbase' => ['length' => 255],
         'copyright' => ['length' => 255],
         'vid' => ['notnull' => false, 'length' => 65535]

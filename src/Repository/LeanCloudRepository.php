@@ -15,15 +15,21 @@ use InvalidArgumentException;
 use LeanCloud\ACL;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
+use Psr\Log\LoggerInterface;
 
 class LeanCloudRepository implements RepositoryInterface
 {
     use RepositoryTrait;
 
-    public function __construct(LeanCloud $LeanCloud)
+    /** @var LoggerInterface */
+    private $logger;
+
+    public function __construct(LeanCloud $LeanCloud, LoggerInterface $logger)
     {
         Image::registerClass();
         Record::registerClass();
+
+        $this->logger = $logger;
     }
 
     private static function createACL() : ACL
@@ -137,15 +143,15 @@ class LeanCloudRepository implements RepositoryInterface
         return $images;
     }
 
-    public function findMarketsHaveArchiveOfDate(DateTimeInterface $date, array $markets)
+    public function findMarketsHaveRecordOn(Date $date, array $markets) : array
     {
         $query = new Query(Record::CLASS_NAME);
-        $query->equalTo('date', $date->format('Ymd'))->containedIn('market', $markets);
-        $results = [];
+        $query->equalTo('date', $date->get()->format('Ymd'))->containedIn('market', $markets);
+        $results = $query->find();
 
-        /** @var LeanObject $result */
-        foreach ($query->find() as $result) {
-            $results[] = $result->get('market');
+        /** @var Record $result */
+        foreach ($results as $i => $result) {
+            $results[$i] = $result->get('market');
         }
 
         return $results;
@@ -153,10 +159,15 @@ class LeanCloudRepository implements RepositoryInterface
 
     public function save(RecordModel $record, ImageModel $image) : void
     {
+        $this->logger->debug("Got record {$record->market} {$record->date->get()->format('Y/n/j')}");
         $image = $this->findOrCreateImage($image, $record);
         $record = $this->createRecord($record, $image);
-        $duplicates = $this->findDuplicateRecord($record);
-        if ($duplicates !== []) {
+        $results = $this->findDuplicateRecord($record);
+        if ($results !== []) {
+            /** @var Record $result */
+            foreach ($results as $result) {
+                $this->logger->critical("Duplicate record: {$result->getObjectId()}");
+            }
             throw new InvalidArgumentException('Duplicate record found');
         }
         LeanObject::saveAll([$record]);
@@ -169,6 +180,7 @@ class LeanCloudRepository implements RepositoryInterface
         $object = $query->find();
 
         if ($object === []) {
+            $this->logger->debug('Create Image: ' . $image->name);
             $object = new Image();
 
             foreach ($image as $field => $value) {
@@ -184,7 +196,10 @@ class LeanCloudRepository implements RepositoryInterface
             return $object;
         }
 
+        /** @var Image $object */
         $object = $object[0];
+
+        $this->logger->debug("Refer Existing Image: {$image->name} ({$object->getObjectId()})");
         $this->referExistingImage($object, $image, $record);
 
         return $object;

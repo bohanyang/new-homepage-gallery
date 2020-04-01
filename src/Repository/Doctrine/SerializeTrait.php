@@ -17,6 +17,12 @@ trait SerializeTrait
         return $this->serializer->serialize($data);
     }
 
+    /**
+     * @param string|resource $data
+     * @return mixed
+     * @throws \Safe\Exceptions\FilesystemException
+     * @throws \Safe\Exceptions\StreamException
+     */
     protected function deserialize($data)
     {
         if (is_resource($data)) {

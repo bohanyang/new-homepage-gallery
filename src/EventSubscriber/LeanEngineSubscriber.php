@@ -3,9 +3,8 @@
 namespace App\EventSubscriber;
 
 use App\LeanCloud;
-use App\TestClearCache;
-use App\TestRoute;
-use App\TestUser;
+use App\LeanCloudFunctions\Batch;
+use App\LeanCloudFunctions\TestClearCache;
 use LeanCloud\Engine\Cloud;
 use LeanCloud\Engine\LeanEngine;
 use LeanCloud\User;
@@ -69,12 +68,15 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
      */
     public static function getSubscribedServices()
     {
-        return ['test' => TestUser::class, 'route' => TestRoute::class, 'clear_cache' => TestClearCache::class];
+        return [
+            'clear_cache' => TestClearCache::class,
+            'batch' => Batch::class
+        ];
     }
 
     public function defineCloudFunctions()
     {
-        $functions = ['test', 'route', 'clear_cache'];
+        $functions = ['clear_cache', 'batch'];
 
         foreach ($functions as $name) {
             Cloud::define(

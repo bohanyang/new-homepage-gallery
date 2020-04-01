@@ -38,7 +38,7 @@ services:
     # please note that last definitions always *replace* previous ones
 
     App\Repository\RepositoryInterface:
-        alias: 'App\Repository\DoctrineRepository'
+        alias: 'App\Repository\LeanCloudRepository'
 
     App\LeanCloud:
         arguments:
@@ -52,7 +52,7 @@ services:
             - '%env(LEANCLOUD_SESSION_TOKEN)%'
             - '%env(LEANCLOUD_APP_ENV)%'
             - '%kernel.environment%'
-            - false
+            - '%kernel.debug%'
 
     ipip\db\Reader:
         arguments:
@@ -85,10 +85,13 @@ services:
             - 'https://global.bing.com/HPImageArchive.aspx'
             - '@monolog.logger'
 
-#    doctrine_repository.sqlite3:
-#        class: App\Repository\Doctrine\Repository
+#    doctrine_repository.postgres:
+#        class: App\Repository\DoctrineRepository
 #        arguments:
-#            - '@doctrine.dbal.sqlite3_connection'
+#            - '@doctrine.dbal.postgres_connection'
 #
 #    App\Command\ImportDBCommand:
-#        $sqlite3: '@doctrine_repository.sqlite3'
+#        $postgres: '@doctrine_repository.postgres'
+
+    App\Collector:
+        $repository: '@App\Repository\LeanCloudRepository'

@@ -33,6 +33,7 @@ class RecordTable extends AbstractTable
         [self::PRIMARY_KEY_INDEX, ['id']],
         [self::NORMAL_INDEX, ['date_']],
         [self::NORMAL_INDEX, ['image_id']],
+        [self::NORMAL_INDEX, ['market', 'date_']]
         //[self::NORMAL_INDEX, ['image_object_id']]
     ];
 
