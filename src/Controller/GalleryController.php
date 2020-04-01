@@ -203,7 +203,7 @@ final class GalleryController extends AbstractController
                 }
             );
         } catch (NotFoundException $e) {
-            throw $this->createNotFoundException($e->getMessage());
+            throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         return $this->render(
