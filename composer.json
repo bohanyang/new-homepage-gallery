@@ -82,7 +82,7 @@
     "repositories": {
         "0": {
             "type": "vcs",
-            "url": "git@e.coding.net:brent/bing-wallpaper.git"
+            "url": "https://e.coding.net/brent/bing-wallpaper.git"
         },
         "packagist": {
             "type": "composer",
