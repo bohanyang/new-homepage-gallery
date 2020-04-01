@@ -30,9 +30,6 @@
         "symfony/yaml": "*",
         "thecodingmachine/safe": "^1.0"
     },
-    "suggest": {
-        "pcrov/jsonreader": "JSON reader"
-    },
     "require-dev": {
         "sensiolabs/security-checker": "^6.0",
         "symfony/debug-pack": "^1.0",
