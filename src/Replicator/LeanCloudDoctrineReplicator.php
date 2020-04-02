@@ -50,7 +50,9 @@ class LeanCloudDoctrineReplicator
     {
         $data = $record->toModelParams();
         $data['id'] = $record->getObjectId();
-        $data['image_id'] = $record->get('image')->getObjectId();
+        $image = $record->get('image');
+        /** @var Image $image */
+        $data['image_id'] = $image->getObjectId();
 
         return $data;
     }

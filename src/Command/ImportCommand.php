@@ -37,8 +37,8 @@ class ImportCommand extends Command
         $images = ['5e82ef2791db28006a757af9'];
         $count = 0;
         foreach ($images as $image) {
-            /** @var Image $image */
             $image = (new Query(Image::CLASS_NAME))->get($image);
+            /** @var Image $image */
             $this->replicator->importImage($image);
             $count++;
         }
