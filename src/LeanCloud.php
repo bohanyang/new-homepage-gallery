@@ -32,10 +32,6 @@ final class LeanCloud implements IStorage
         }
 
         if ($region !== null) {
-            if (is_numeric($region)) {
-                $region = (int) $region;
-            }
-
             Client::useRegion($region);
         }
 

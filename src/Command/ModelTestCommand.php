@@ -47,8 +47,7 @@ class ModelTestCommand extends Command
                 ]
             );
             if (!$io->confirm('Sure?', true)) {
-                //throw new RuntimeException('Aborted');
-                exit;
+                throw new RuntimeException('Aborted');
             }
         } catch (Throwable $e) {
             $conn->rollBack();
