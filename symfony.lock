@@ -183,9 +183,6 @@
     "spatie/data-transfer-object": {
         "version": "1.13.3"
     },
-    "spomky-labs/base64url": {
-        "version": "v2.0.1"
-    },
     "spomky-labs/otphp": {
         "version": "v10.0.1"
     },
