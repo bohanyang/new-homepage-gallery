@@ -141,6 +141,9 @@
     "spomky-labs/otphp": {
         "version": "v10.0.1"
     },
+    "symfony/browser-kit": {
+        "version": "v5.0.7"
+    },
     "symfony/cache": {
         "version": "v4.4.0"
     },
@@ -162,6 +165,9 @@
             "./bin/console",
             "./config/bootstrap.php"
         ]
+    },
+    "symfony/css-selector": {
+        "version": "v5.0.7"
     },
     "symfony/debug": {
         "version": "v4.4.0"

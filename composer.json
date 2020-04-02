@@ -21,6 +21,7 @@
         "symfony/monolog-bundle": "^3.4",
         "symfony/polyfill-intl-messageformatter": "^1.13",
         "symfony/orm-pack": "^1.0",
+        "symfony/test-pack": "^1.0",
         "symfony/translation": "5.0.*",
         "symfony/twig-bundle": "*",
         "symfony/validator": "*",

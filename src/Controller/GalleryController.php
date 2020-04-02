@@ -6,19 +6,19 @@ use App\Model\Date;
 use App\Model\Image;
 use App\Model\ImageView;
 use App\Model\RecordView;
-use App\Repository\LeanCloudRepository;
 use App\Repository\NotFoundException;
 use App\Repository\RepositoryInterface;
 use App\Settings;
 use BohanYang\BingWallpaper\Market;
 use DateTimeZone;
 use League\Uri\UriString;
-use Safe\DateTime;
 use Safe\DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+
+use function compact;
 
 final class GalleryController extends AbstractController
 {
@@ -50,11 +50,15 @@ final class GalleryController extends AbstractController
     /** @var array */
     private $params = [];
 
+    /** @var Expiration */
+    private $exp;
+
     public function __construct(
         RepositoryInterface $repository,
         CacheInterface $cache,
         Settings $settings,
-        ContainerBagInterface $params
+        ContainerBagInterface $params,
+        Expiration $exp
     ) {
         $this->repository = $repository;
         $this->cache = $cache;
@@ -69,6 +73,7 @@ final class GalleryController extends AbstractController
             'app.video_origin',
             'https://az29176.vo.msecnd.net'
         );
+        $this->exp = $exp;
     }
 
     private static function getOptionalParam(ContainerBagInterface $params, string $key, $default)
@@ -84,39 +89,36 @@ final class GalleryController extends AbstractController
 
     public function image(string $name)
     {
-        try {
-            /** @var ImageView $image */
-            $image = $this->cache->get(
-                "image.$name",
-                function (ItemInterface $item) use ($name) {
-                    $this->expireNextHour($item);
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
-                    return $this->repository->getImage($name);
+        try {
+            $data = $this->cache->get(
+                "image.$name",
+                function (ItemInterface $item) use ($now, $name) {
+                    $item->expiresAt($this->exp->nextHour($now));
+                    $image = $this->repository->getImage($name);
+
+                    /** @var ImageView $image */
+                    return [
+                        'image' => $image,
+                        'video_url' => $this->getVideoUrl($image)
+                    ];
                 }
             );
         } catch (NotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        return $this->render(
-            'image.html.twig',
-            [
-                'image' => $image,
-                'image_origin' => $this->params['image_origin'],
-                'image_size' => $this->settings->getImageSize(),
-                'video_url' => $this->getVideoUrl($image),
-                'flags' => self::FLAGS,
-                'date_format' => self::DATE_STRING_FORMAT
-            ]
-        );
+        $data['image_origin'] = $this->params['image_origin'];
+        $data['image_size'] = $this->settings->getImageSize();
+        $data['flags'] = self::FLAGS;
+        $data['date_format'] = self::DATE_STRING_FORMAT;
+
+        return $this->render('image.html.twig', $data);
     }
 
     public function browse(string $page)
     {
-        if ($page < 1) {
-            throw new BadRequestHttpException("Invalid page number '${page}'");
-        }
-
         $limit = 15;
         $skip = $limit * ($page - 1);
 
@@ -124,12 +126,14 @@ final class GalleryController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
         try {
             /** @var Image[] $images */
             $images = $this->cache->get(
                 "browse.$page",
-                function (ItemInterface $item) use ($limit, $skip) {
-                    $this->expireNextHour($item);
+                function (ItemInterface $item) use ($now, $limit, $skip) {
+                    $item->expiresAt($this->exp->nextHour($now));
 
                     return $this->repository->listImages($limit, $skip);
                 }
@@ -152,32 +156,33 @@ final class GalleryController extends AbstractController
 
     public function date(string $date)
     {
-        $date = $this->getDateStringInfo($date, new DateTimeZone('Australia/Sydney'));
+        $now = new DateTimeImmutable('now', new DateTimeZone('Australia/Sydney'));
 
         try {
-            /** @var ImageView[] $images */
-            $images = $this->cache->get(
-                "date.{$date['current']}",
-                function (ItemInterface $item) use ($date) {
-                    $this->expireNextHour($item);
+            $data = $this->cache->get(
+                "date.${date}",
+                function (ItemInterface $item) use ($now, $date) {
+                    $date = $this->getDateStringInfo($date, $now);
 
-                    return $this->repository->findImagesByDate(Date::createFromYmd($date['current']));
+                    if (!$date['old']) {
+                        $item->expiresAt($this->exp->nextHour($now));
+                    }
+
+                    $images = $this->repository->findImagesByDate(Date::createFromYmd($date['current']));
+
+                    /** @var ImageView[] $images */
+                    return compact('images', 'date');
                 }
             );
         } catch (NotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        return $this->render(
-            'date.html.twig',
-            [
-                'images' => $images,
-                'image_origin' => $this->params['image_origin'],
-                'image_size' => $this->settings->getThumbnailSize(),
-                'flags' => self::FLAGS,
-                'date' => $date
-            ]
-        );
+        $data['image_origin'] = $this->params['image_origin'];
+        $data['image_size'] = $this->settings->getThumbnailSize();
+        $data['flags'] = self::FLAGS;
+
+        return $this->render('date.html.twig', $data);
     }
 
     public function archive(string $market = '', string $date = '')
@@ -187,69 +192,43 @@ final class GalleryController extends AbstractController
         }
 
         $market = new Market($market);
-        $timezone = $market->getTimeZone();
-
-        if ($date === '') {
-            $date = $this->getTodayInfo($timezone);
-        } else {
-            $date = $this->getDateStringInfo($date, $timezone);
-        }
+        $now = new DateTimeImmutable('now', $market->getTimeZone());
 
         try {
-            /** @var RecordView $record */
-            $record = $this->cache->get(
-                "archive.${market}.{$date['current']}",
-                function (ItemInterface $item) use ($market, $date) {
-                    $this->expireTomorrow($item, $market->getTimeZone());
+            $data = $this->cache->get(
+                "archive.${market}.${date}",
+                function (ItemInterface $item) use ($market, $date, $now) {
+                    if ($date === '') {
+                        $date = $this->getTodayInfo($now);
+                    } else {
+                        $date = $this->getDateStringInfo($date, $now);
+                    }
 
-                    return $this->repository->getRecord($market->getName(), Date::createFromYmd($date['current']));
+                    if (!$date['old']) {
+                        $item->expiresAt($this->exp->tomorrow($now));
+                    }
+
+                    $record = $this->repository->getRecord($market->getName(), Date::createFromYmd($date['current']));
+                    $video = $this->getVideoUrl($record->image);
+
+                    /** @var RecordView $record */
+                    return compact('record', 'video', 'date');
                 }
             );
         } catch (NotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
-        return $this->render(
-            'archive.html.twig',
-            [
-                'record' => $record,
-                'image' => $record->image,
-                'image_origin' => $this->params['image_origin'],
-                'video' => $this->getVideoUrl($record->image),
-                'image_size' => $this->settings->getImageSize(),
-                'date' => $date
-            ]
-        );
+        $data['image'] = $data['record']->image;
+        $data['image_origin'] = $this->params['image_origin'];
+        $data['image_size'] = $this->settings->getImageSize();
+
+        return $this->render('archive.html.twig', $data);
     }
 
-    private function expireNextHour(ItemInterface $item)
+    private function getTodayInfo(DateTimeImmutable $now)
     {
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $delay = $now->setTime($now->format('G'), 3, 1);
-
-        if ($now < $delay) {
-            return $item->expiresAt($delay);
-        }
-
-        return $item->expiresAt($delay->modify('+1 hour'));
-    }
-
-    private function expireTomorrow(ItemInterface $item, DateTimeZone $timezone)
-    {
-        $now = new DateTimeImmutable('now', $timezone);
-        $delay = $now->setTime(0, 3, 1);
-
-        if ($now < $delay) {
-            return $item->expiresAt($delay);
-        }
-
-        return $item->expiresAt($delay->modify('+1 day'));
-    }
-
-    private function getTodayInfo(DateTimeZone $timezone)
-    {
-        $now = new DateTimeImmutable('now', $timezone);
-        $delay = $now->setTime(0, 3);
+        $delay = $this->exp->fixDelay($now->setTime(0, 3));
 
         if ($now < $delay) {
             $now = $now->modify('yesterday');
@@ -265,11 +244,10 @@ final class GalleryController extends AbstractController
         ];
     }
 
-    private function getDateStringInfo(string $string, DateTimeZone $timezone)
+    private function getDateStringInfo(string $string, DateTimeImmutable $now)
     {
-        $date = DateTimeImmutable::createFromFormat('!' . self::DATE_STRING_FORMAT, $string, $timezone);
-        $now = new DateTimeImmutable('now', $timezone);
-        $delay = $date->modify('tomorrow 00:03');
+        $date = DateTimeImmutable::createFromFormat('!' . self::DATE_STRING_FORMAT, $string, $now->getTimezone());
+        $delay = $this->exp->fixDelay($date->modify('tomorrow 00:03'));
         $result = [
             'object' => $date,
             'old' => $now >= $delay,

@@ -23,7 +23,7 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
     /** @var ContainerInterface */
     private $container;
 
-    public function __construct(LeanCloud $lc, ContainerInterface $container)
+    public function __construct(/** @scrutinizer ignore-unused */ LeanCloud $LeanCloud, ContainerInterface $container)
     {
         $this->container = $container;
     }
