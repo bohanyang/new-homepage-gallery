@@ -2,6 +2,7 @@
 /.idea/
 /Caddyfile
 /.leancloud/
+/bin/.phpunit/
 
 ###> symfony/framework-bundle ###
 /.env.local
