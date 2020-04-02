@@ -15,7 +15,6 @@ use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
@@ -48,9 +47,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSu
         $this->cookieBuffer = $cookieBuffer;
         $this->settings = $settings;
         $this->container = $container;
-        $this->destination = $params->has('geo_redirect.destination') ?
-            $params->get('geo_redirect.destination') :
-            null;
+        $this->destination = $params->has('geo_redirect.destination') ? $params->get('geo_redirect.destination') : null;
     }
 
     public static function getSubscribedEvents()
@@ -62,7 +59,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSu
         ];
     }
 
-    private function isGeoSpecific(Request $request)
+    private function isGeoSpecific()
     {
         return !isset($this->destination);
     }
@@ -135,7 +132,7 @@ final class GeoRedirectSubscriber implements EventSubscriberInterface, ServiceSu
             return;
         }
 
-        if ($this->isGeoSpecific($event->getRequest())) {
+        if ($this->isGeoSpecific()) {
             $this->geoMigrate($event);
 
             return;
