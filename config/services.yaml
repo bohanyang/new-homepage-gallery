@@ -97,3 +97,11 @@ services:
 
     App\Collector:
         $repository: '@App\Repository\LeanCloudRepository'
+
+    App\Monolog\FeishuBotHandler:
+        class: App\Monolog\FeishuBotHandler
+        arguments:
+            $appId: '%env(FEISHU_APP_ID)%'
+            $appSecret: '%env(FEISHU_APP_SECRET)%'
+            $channel: '%env(json:FEISHU_CHANNEL)%'
+            $level: !php/const Monolog\Logger::WARNING

@@ -5,6 +5,7 @@ namespace App\EventSubscriber;
 use App\LeanCloud;
 use App\LeanCloudFunctions\Batch;
 use App\LeanCloudFunctions\TestClearCache;
+use App\LeanCloudFunctions\TestLog;
 use App\LeanCloudFunctions\WakeUp;
 use LeanCloud\Engine\Cloud;
 use LeanCloud\Engine\LeanEngine;
@@ -72,13 +73,14 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
         return [
             'clear_cache' => TestClearCache::class,
             'batch' => Batch::class,
-            'wake_up' => WakeUp::class
+            'wake_up' => WakeUp::class,
+            'test_log' => TestLog::class
         ];
     }
 
     public function defineCloudFunctions()
     {
-        $functions = ['clear_cache', 'batch', 'wake_up'];
+        $functions = ['clear_cache', 'batch', 'wake_up', 'test_log'];
 
         foreach ($functions as $name) {
             Cloud::define(
