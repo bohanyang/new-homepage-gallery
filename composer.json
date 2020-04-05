@@ -12,6 +12,7 @@
         "league/uri-components": "^2.1",
         "leancloud/leancloud-sdk": "^0.10.3",
         "maxmind-db/reader": "^1.5",
+        "pcrov/jsonreader": "^1.0",
         "spatie/data-transfer-object": "^1.13",
         "spomky-labs/otphp": "^10.0",
         "symfony/console": "*",

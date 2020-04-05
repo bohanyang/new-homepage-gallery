@@ -40,7 +40,7 @@ services:
     # please note that last definitions always *replace* previous ones
 
     App\Repository\RepositoryInterface:
-        alias: 'App\Repository\LeanCloudRepository'
+        alias: 'App\Repository\DoctrineRepository'
 
     App\LeanCloud:
         arguments:

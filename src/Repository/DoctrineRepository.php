@@ -7,40 +7,26 @@ use App\Model\Image;
 use App\Model\ImageView;
 use App\Model\Record;
 use App\Model\RecordView;
-use App\Repository\Doctrine\AbstractTable;
-use App\Repository\Doctrine\RecordTable;
-use App\Repository\Doctrine\ImageTable;
+use App\Repository\Doctrine\InsertTrait;
+use App\Repository\Doctrine\SchemaTrait;
 use App\Repository\Doctrine\SelectQuery;
-use App\Repository\Doctrine\Serializer;
-use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\Provider\SchemaProviderInterface;
-use MongoDB\BSON\ObjectId;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use UnexpectedValueException;
 
 use function array_column;
 use function Safe\sprintf;
 
 class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
 {
-    use RepositoryTrait;
-
-    /** @var ImageTable */
-    private $imageTable;
-
-    /** @var RecordTable */
-    private $recordTable;
+    use ReferExistingImageTrait;
+    use InsertTrait;
+    use SchemaTrait;
 
     /** @var Connection */
     private $conn;
-
-    /** @var AbstractPlatform */
-    private $platform;
 
     /** @var LoggerInterface */
     private $logger;
@@ -49,49 +35,8 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     {
         //$conn->getConfiguration()->setSQLLogger(null);
         $this->conn = $conn;
-        $this->platform = $conn->getDatabasePlatform();
-        $serializer = new Serializer();
-        $this->imageTable = new ImageTable($this->platform, $serializer);
-        $this->recordTable = new RecordTable($this->platform, $serializer);
         $this->logger = $logger;
-    }
-
-    public function createSchema() : Schema
-    {
-        $schema = new Schema([], [], $this->conn->getSchemaManager()->createSchemaConfig());
-        $this->recordTable->addToSchema($schema);
-        $this->imageTable->addToSchema($schema);
-        return $schema;
-    }
-
-    public function getConnection() : Connection
-    {
-        return $this->conn;
-    }
-
-    public function insertImage($image) : string
-    {
-        $this->insert($this->imageTable, $image);
-        return $image['id'];
-    }
-
-    public function insertRecord($record) : string
-    {
-        $this->insert($this->recordTable, $record);
-        return $record['id'];
-    }
-
-    private function insert(AbstractTable $table, $data) : void
-    {
-        [$params, $types, $columns, $placeholders] = $table->getInsertParams($data);
-
-        $sql = "INSERT INTO {$table->getName()} (${columns}) VALUES (${placeholders})";
-
-        $inserted = $this->conn->executeUpdate($sql, $params, $types);
-
-        if ($inserted !== 1) {
-            throw new RuntimeException("Failed to insert into table {$table->getName()}");
-        }
+        $this->register($conn->getDatabasePlatform());
     }
 
     public function saveRecord(array $record) : void
@@ -119,7 +64,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     {
         $query = new SelectQuery($this->conn);
         $imageTable = $query->addTable($this->imageTable, ['id', 'wp', 'copyright', 'last_appeared_on'], 'i');
-        [$name, $type] = $this->imageTable->getQueryParam('name', $name);
+        $type = $this->imageTable->getColumnType('name');
 
         $query
             ->getBuilder()
@@ -127,7 +72,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->where('i.name = ?')
             ->setParameter(0, $name, $type);
 
-        $image = $query->getResults();
+        $image = $query->fetchAll();
 
         return $image === [] ? null : $image[0][$imageTable];
     }
@@ -140,7 +85,8 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             $image = $image->all();
             //$image['first_appeared_on'] = $record->date;
             //$image['last_appeared_on'] = $record->date;
-            return $this->insertImage($image);
+            $this->insertImage($image);
+            return $image['id'];
         }
 
         $pointer = new DoctrineImagePointer($this, $result);
@@ -178,8 +124,8 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
         $query = new SelectQuery($this->conn);
         $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
-        [$market, $marketType] = $this->recordTable->getQueryParam('market', $market);
-        [$date, $dateType] = $this->recordTable->getQueryParam('date_', $date);
+        $marketType = $this->recordTable->getColumnType('market');
+        $dateType = $this->recordTable->getColumnType('date_');
 
         $query
             ->getBuilder()
@@ -189,7 +135,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setMaxResults(1)
             ->setParameters([$market, $date], [$marketType, $dateType]);
 
-        $record = $query->getData();
+        $record = $query->fetchAll();
 
         if ($record === []) {
             throw NotFoundException::record($market, $date);
@@ -207,7 +153,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
         $query = new SelectQuery($this->conn);
         $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
-        [$name, $type] = $this->imageTable->getQueryParam('name', $name);
+        $type = $this->imageTable->getColumnType('name');
 
         $query
             ->getBuilder()
@@ -217,7 +163,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->orderBy('r.date_', 'DESC')
             ->setParameter(0, $name, $type);
 
-        $results = $query->getData();
+        $results = $query->fetchAll();
 
         if ($results === []) {
             throw NotFoundException::image($name);
@@ -241,7 +187,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setFirstResult($skip)
             ->setMaxResults($limit);
 
-        $images = $query->getData();
+        $images = $query->fetchAll();
 
         if ($images === []) {
             throw NotFoundException::images();
@@ -259,7 +205,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
         $query = new SelectQuery($this->conn);
         $recordTable = $query->addTable($this->recordTable, $this->recordTable->getAllColumns(), 'r');
         $imageTable = $query->addTable($this->imageTable, $this->imageTable->getAllColumns(), 'i');
-        [$date, $type] = $this->recordTable->getQueryParam('date_', $date);
+        $type = $this->recordTable->getColumnType('date_');
 
         $query
             ->getBuilder()
@@ -269,7 +215,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->orderBy('r.market')
             ->setParameter(0, $date, $type);
 
-        $results = $query->getData();
+        $results = $query->fetchAll();
 
         if ($results === []) {
             throw NotFoundException::date($date);
@@ -307,7 +253,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setFirstResult($skip)
             ->setMaxResults($limit);
 
-        $results = $query->getResults();
+        $results = $query->fetchAll();
 
         return array_column($results, $imageTable);
     }
@@ -323,7 +269,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setFirstResult($skip)
             ->setMaxResults($limit);
 
-        $results = $query->getResults();
+        $results = $query->fetchAll();
 
         return array_column($results, $imageTable);
     }
@@ -339,7 +285,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->setFirstResult($skip)
             ->setMaxResults($limit);
 
-        $results = $query->getData();
+        $results = $query->fetchAll();
 
         return array_column($results, $recordTable);
     }
@@ -348,7 +294,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
     {
         $query = new SelectQuery($this->conn);
         $recordTable = $query->addTable($this->recordTable, ['market']);
-        [$date, $dateType] = $this->recordTable->getQueryParam('date_', $date);
+        $dateType = $this->recordTable->getColumnType('date_');
         [$markets, $marketType] = $this->recordTable->getArrayParam('market', $markets);
 
         $query
@@ -357,7 +303,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->where('date_ = ?', 'market IN (?)')
             ->setParameters([$date, $markets], [$dateType, $marketType]);
 
-        $results = $query->getResults();
+        $results = $query->fetchAll();
 
         foreach ($results as $i => $result) {
             $results[$i] = $result[$recordTable]['market'];

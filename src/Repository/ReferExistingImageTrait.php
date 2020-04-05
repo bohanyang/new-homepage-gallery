@@ -7,7 +7,7 @@ use App\Model\Record;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
-trait RepositoryTrait
+trait ReferExistingImageTrait
 {
     /** @var LoggerInterface */
     private $logger;

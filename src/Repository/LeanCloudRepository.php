@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 
 class LeanCloudRepository implements RepositoryInterface
 {
-    use RepositoryTrait;
+    use ReferExistingImageTrait;
 
     /** @var LoggerInterface */
     private $logger;
