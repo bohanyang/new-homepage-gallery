@@ -3,6 +3,7 @@
 namespace App\Repository\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
@@ -34,17 +35,15 @@ abstract class AbstractTable
     /** @var array */
     protected $columnOptions = [];
 
-    /** @var array */
-    protected $queryCallbacks = [];
+    public const FIELD_MAPPINGS = [];
 
     /** @var array */
-    protected $resultCallbacks = [];
+    protected $fieldMappings;
+
+    public const COLUMN_NAME_MAPPINGS = [];
 
     /** @var array */
-    protected $fieldMappings = [];
-
-    /** @var array */
-    protected $columnNameMappings = [];
+    protected $columnNameMappings;
 
     abstract protected function initialize($params) : void;
 
@@ -53,6 +52,8 @@ abstract class AbstractTable
         $this->platform = $platform;
         $this->name = static::NAME;
         $this->columns = static::COLUMNS;
+        $this->setFieldMappings();
+        $this->setColumnNameMappings();
         $this->initialize($params);
     }
 
@@ -61,58 +62,26 @@ abstract class AbstractTable
         return Type::getType($type)->convertToPHPValue($value, $this->platform);
     }
 
-    protected function applyQueryCallback(string $column, $value)
+    private static function getArrayType(Type $type)
     {
-        if (isset($this->queryCallbacks[$column])) {
-            $value = $this->{$this->queryCallbacks[$column]}($value);
+        $type = $type->getBindingType();
+
+        if ($type === ParameterType::STRING) {
+            return Connection::PARAM_STR_ARRAY;
+        } elseif ($type === ParameterType::INTEGER) {
+            return Connection::PARAM_INT_ARRAY;
         }
 
-        return $value;
+        throw new InvalidArgumentException('The parameter list only supports string and integer type');
     }
 
-    public function applyResultCallback(string $column, $value)
+    public function getColumnType(string $column) : Type
     {
-        if (isset($this->resultCallbacks[$column])) {
-            $type = $this->getColumnType($column);
-            $value = $this->{$this->resultCallbacks[$column]}($value, $type);
+        if (!isset($this->columns[$column])) {
+            throw new InvalidArgumentException("Column ${column} does not exist in table {$this->name}");
         }
 
-        return $value;
-    }
-
-    protected function arrayApplyQueryCallback(string $column, array $values)
-    {
-        if (isset($this->queryCallbacks[$column])) {
-            foreach ($values as $i => $value) {
-                $values[$i] = $this->{$this->queryCallbacks[$column]}($value);
-            }
-        }
-
-        return $values;
-    }
-
-    protected function getArrayType(string $column)
-    {
-        $type = $this->getColumnType($column);
-
-        return Type::getType($type)->getBindingType() + Connection::ARRAY_PARAM_OFFSET;
-    }
-
-    protected function getColumnType(string $column)
-    {
-        if (isset($this->columns[$column])) {
-            return $this->columns[$column];
-        }
-
-        throw new InvalidArgumentException("Column ${column} does not exist in table {$this->name}");
-    }
-
-    public function getQueryParam(string $column, $value)
-    {
-        $type = $this->getColumnType($column);
-        $value = $this->applyQueryCallback($column, $value);
-
-        return [$value, $type];
+        return Type::getType($this->columns[$column]);
     }
 
     public function getName() : string
@@ -120,12 +89,16 @@ abstract class AbstractTable
         return $this->name;
     }
 
+    /** @see Connection::getBindingInfo() */
     public function getArrayParam(string $column, array $values)
     {
-        $type = $this->getArrayType($column);
-        $values = $this->arrayApplyQueryCallback($column, $values);
+        $type = $this->getColumnType($column);
 
-        return [$values, $type];
+        foreach ($values as $i => $value) {
+            $values[$i] = $type->convertToDatabaseValue($value, $this->platform);
+        }
+
+        return [$values, self::getArrayType($type)];
     }
 
     protected function getColumnName(string $field) : string
@@ -148,9 +121,8 @@ abstract class AbstractTable
         foreach ($data as $column => $value) {
             if ($value !== null) {
                 $column = $this->getColumnName($column);
-                [$value, $type] = $this->getQueryParam($column, $value);
                 $params[] = $value;
-                $types[] = $type;
+                $types[] = $this->getColumnType($column);
                 $columns[] = $column;
                 $placeholders[] = '?';
             }
@@ -174,7 +146,7 @@ abstract class AbstractTable
         foreach ($data as $column => $value) {
             if ($value !== null) {
                 $column = $this->getColumnName($column);
-                [$value, $type] = $this->getQueryParam($column, $value);
+                $type = $this->getColumnType($column);
                 $params[] = $value;
                 $values[$column] = $value;
                 $types[] = $type;
@@ -218,5 +190,23 @@ abstract class AbstractTable
         }
 
         return $table;
+    }
+
+    public function setFieldMappings(array $mappings = null) : void
+    {
+        if ($mappings === null) {
+            $mappings = static::FIELD_MAPPINGS;
+        }
+
+        $this->fieldMappings = $mappings;
+    }
+
+    public function setColumnNameMappings(array $mappings = null) : void
+    {
+        if ($mappings === null) {
+            $mappings = static::COLUMN_NAME_MAPPINGS;
+        }
+
+        $this->columnNameMappings = $mappings;
     }
 }

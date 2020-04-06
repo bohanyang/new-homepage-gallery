@@ -3,14 +3,12 @@
 namespace App\Command;
 
 use App\Replicator\LeanCloudDoctrineReplicator;
-use App\Repository\LeanCloud\Image;
-use App\Repository\LeanCloud\Record;
-use LeanCloud\LeanObject;
 use pcrov\JsonReader\JsonReader;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
 class ImportJsonCommand extends Command
@@ -37,12 +35,12 @@ class ImportJsonCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $io = new SymfonyStyle($input, $output);
-        $conn = $this->replicator->getDoctrine()->getConnection();
+        $conn = $this->replicator->getConnection();
         $conn->beginTransaction();
 
         try {
-            $this->readData($input->getOption('image'), [$this, 'importImage']);
-            $this->readData($input->getOption('record'), [$this, 'importRecord']);
+            $this->readData($input->getOption('image'), [$this->replicator, 'importImageArray']);
+            $this->readData($input->getOption('record'), [$this->replicator, 'importRecordArray']);
         } catch (Throwable $e) {
             $conn->rollBack();
 
@@ -52,22 +50,6 @@ class ImportJsonCommand extends Command
         $conn->commit();
 
         return 0;
-    }
-
-    private function importImage(array $data)
-    {
-        /** @var Image $object */
-        $object = LeanObject::create(Image::CLASS_NAME);
-        $object->mergeAfterSave($data);
-        $this->replicator->importImage($object);
-    }
-
-    private function importRecord(array $data)
-    {
-        /** @var Record $object */
-        $object = LeanObject::create(Record::CLASS_NAME);
-        $object->mergeAfterSave($data);
-        $this->replicator->importRecord($object);
     }
 
     private function readData(string $json, callable $callback)
