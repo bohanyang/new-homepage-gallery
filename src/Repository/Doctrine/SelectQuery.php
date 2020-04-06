@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -12,19 +13,14 @@ use Doctrine\DBAL\Types\Type;
 
 final class SelectQuery
 {
+    /** @var int */
     private $counter = 0;
 
     /** @var string[] */
     private $selects = [];
 
-    /** @var string[] */
-    private $tableMap = [];
-
-    /** @var string[] */
-    private $fieldMap = [];
-
-    /** @var Type[] */
-    private $typeMap = [];
+    /** @var array */
+    private $aliasMap = [];
 
     /** @var AbstractPlatform */
     private $platform;
@@ -34,6 +30,12 @@ final class SelectQuery
 
     /** @var QueryBuilder */
     private $builder;
+
+    /** @var Statement */
+    private $results;
+
+    /** @var array */
+    private $result;
 
     public function __construct(Connection $conn)
     {
@@ -57,12 +59,13 @@ final class SelectQuery
 
     private function addAlias(AbstractTable $table, string $tableAlias, string $column) : void
     {
-        $alias = 'f' . $this->counter++;
-        $this->selects[] = "$tableAlias$column $alias";
+        $alias = 'c' . $this->counter++;
+        $this->selects[] = "${tableAlias}${column} ${alias}";
         $alias = $this->platform->getSQLResultCasing($alias);
-        $this->tableMap[$alias] = $table->getName();
-        $this->fieldMap[$alias] = $table->getField($column);
-        $this->typeMap[$alias] = $table->getColumnType($column);
+        $this->aliasMap[$table->getName()][$table->getField($column)] = [
+            $alias,
+            $table->getColumnType($column)
+        ];
     }
 
     public function getBuilder() : QueryBuilder
@@ -70,21 +73,35 @@ final class SelectQuery
         return $this->builder = $this->conn->createQueryBuilder()->select($this->selects);
     }
 
-    public function fetchAll() : array
+    public function execute() : void
     {
-        $results = $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
+        $this->results = $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
+        unset($this->builder);
+    }
 
-        foreach ($results as $i => $result) {
-            foreach ($result as $alias => $value) {
-                if (isset($this->tableMap[$alias]) && $value !== null) {
-                    $table = $this->tableMap[$alias];
-                    $field = $this->fieldMap[$alias];
-                    $value = $this->typeMap[$alias]->convertToPHPValue($value, $this->platform);
-                    $results[$i][$table][$field] = $value;
-                }
+    public function fetch()
+    {
+        return $this->result = $this->results->fetch();
+    }
+
+    public function getField($table, $field)
+    {
+        [$alias] = $this->aliasMap[$table][$field];
+
+        return $this->result[$alias];
+    }
+
+    public function getResult(string $table)
+    {
+        $result = [];
+
+        /** @var Type $type */
+        foreach ($this->aliasMap[$table] as $field => [$alias, $type]) {
+            if ($this->result[$alias] !== null) {
+                $result[$field] = $type->convertToPHPValue($this->result[$alias], $this->platform);
             }
         }
 
-        return $results;
+        return $result;
     }
 }
