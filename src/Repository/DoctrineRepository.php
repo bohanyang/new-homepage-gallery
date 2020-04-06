@@ -215,21 +215,23 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
             ->orderBy('r.market')
             ->setParameter(0, $date, $type);
 
-        $query->execute();
-        $images = [];
+        $results = $query->fetchAll();
 
-        while ($query->fetch()) {
-            $name = $query->getField($imageTable, 'name');
-
-            if (!isset($images[$name])) {
-                $images[$name] = $query->getResult($imageTable);
-            }
-
-            $images[$name]['records'][] = new Record($query->getResult($recordTable));
+        if ($results === []) {
+            throw NotFoundException::date($date);
         }
 
-        if ($images === []) {
-            throw NotFoundException::date($date);
+        $images = [];
+
+        foreach ($results as $i => $result) {
+            $image = $result[$imageTable];
+            $name = $image['name'];
+
+            if (!isset($images[$name])) {
+                $images[$name] = $image;
+            }
+
+            $images[$name]['records'][] = new Record($result[$recordTable]);
         }
 
         foreach ($images as $name => $image) {

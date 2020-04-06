@@ -31,12 +31,6 @@ final class SelectQuery
     /** @var QueryBuilder */
     private $builder;
 
-    /** @var Statement */
-    private $results;
-
-    /** @var array */
-    private $result;
-
     public function __construct(Connection $conn)
     {
         $this->conn = $conn;
@@ -59,11 +53,11 @@ final class SelectQuery
 
     private function addAlias(AbstractTable $table, string $tableAlias, string $column) : void
     {
-        $alias = 'c' . $this->counter++;
+        $alias = $this->platform->getSQLResultCasing('c' . $this->counter++);
         $this->selects[] = "${tableAlias}${column} ${alias}";
-        $alias = $this->platform->getSQLResultCasing($alias);
-        $this->aliasMap[$table->getName()][$table->getField($column)] = [
-            $alias,
+        $this->aliasMap[$alias] = [
+            $table->getName(),
+            $table->getField($column),
             $table->getColumnType($column)
         ];
     }
@@ -73,35 +67,17 @@ final class SelectQuery
         return $this->builder = $this->conn->createQueryBuilder()->select($this->selects);
     }
 
-    public function execute() : void
+    public function fetchAll()
     {
-        $this->results = $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
-        unset($this->builder);
-    }
+        $results = $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
 
-    public function fetch()
-    {
-        return $this->result = $this->results->fetch();
-    }
-
-    public function getField($table, $field)
-    {
-        [$alias] = $this->aliasMap[$table][$field];
-
-        return $this->result[$alias];
-    }
-
-    public function getResult(string $table)
-    {
-        $result = [];
-
-        /** @var Type $type */
-        foreach ($this->aliasMap[$table] as $field => [$alias, $type]) {
-            if ($this->result[$alias] !== null) {
-                $result[$field] = $type->convertToPHPValue($this->result[$alias], $this->platform);
+        foreach ($results as $i => $result) {
+            foreach ($this->aliasMap as $alias => [$table, $field, $type]) {
+                /** @var Type $type */
+                $results[$i][$table][$field] = $type->convertToPHPValue($result[$alias], $this->platform);
             }
         }
 
-        return $result;
+        return $results;
     }
 }
