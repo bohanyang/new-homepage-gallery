@@ -19,11 +19,11 @@ class NotFoundException extends RuntimeException
 
     public static function record(string $market, Date $date)
     {
-        return new self("No record of '${market}' on '{$date->get()->format('Y/n/j')}' found");
+        return new self("No record of '${market}' on '{$date->format('Y/n/j')}' found");
     }
 
     public static function date(Date $date)
     {
-        return new self("No record found on '{$date->get()->format('Y/n/j')}'");
+        return new self("No record found on '{$date->format('Y/n/j')}'");
     }
 }

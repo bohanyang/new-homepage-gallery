@@ -38,6 +38,6 @@ final class Record extends LeanObject
 
     public function setDate(Date $date) : void
     {
-        $this->set('date', $date->get()->format('Ymd'));
+        $this->set('date', $date->format('Ymd'));
     }
 }

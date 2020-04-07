@@ -38,8 +38,7 @@ final class Date
     public static function createFromUTC(DateTimeInterface $date)
     {
         $instance = new self();
-        $date = new DateTimeImmutable("@{$date->getTimestamp()}");
-        $instance->date = $date->setTime(0, 0, 0);
+        $instance->date = (new DateTimeImmutable("@{$date->getTimestamp()}"))->setTime(0, 0);
 
         return $instance;
     }
@@ -47,5 +46,10 @@ final class Date
     public function get() : DateTimeImmutable
     {
         return $this->date;
+    }
+
+    public function format(string $format) : string
+    {
+        return $this->date->format($format);
     }
 }

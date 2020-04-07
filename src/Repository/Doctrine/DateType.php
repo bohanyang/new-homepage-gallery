@@ -31,7 +31,7 @@ class DateType extends DateImmutableType
         }
 
         if ($value instanceof Date) {
-            return $value->get()->format($platform->getDateFormatString());
+            return $value->format($platform->getDateFormatString());
         }
 
         throw ConversionException::conversionFailedInvalidType($value, static::NAME, ['null', Date::class]);
