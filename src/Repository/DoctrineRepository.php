@@ -110,7 +110,7 @@ class DoctrineRepository implements RepositoryInterface, SchemaProviderInterface
                 sprintf(
                     'Failed to save result of market "%s" on "%s" with image "%s"',
                     $record->market,
-                    $record->date->get()->format('Y/n/j'),
+                    $record->date->format('Y/n/j'),
                     $image->name
                 ), 0, $e
             );

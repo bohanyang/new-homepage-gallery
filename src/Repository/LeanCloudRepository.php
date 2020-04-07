@@ -10,9 +10,7 @@ use App\Model\Record as RecordModel;
 use App\Model\RecordView;
 use App\Repository\LeanCloud\Image;
 use App\Repository\LeanCloud\Record;
-use DateTimeInterface;
 use InvalidArgumentException;
-use LeanCloud\ACL;
 use LeanCloud\LeanObject;
 use LeanCloud\Query;
 use Psr\Log\LoggerInterface;
@@ -32,15 +30,6 @@ class LeanCloudRepository implements RepositoryInterface
         $this->logger = $logger;
     }
 
-    private static function createACL() : ACL
-    {
-        $ACL = new ACL();
-        $ACL->setPublicReadAccess(true);
-        $ACL->setPublicWriteAccess(true);
-
-        return $ACL;
-    }
-
     public function getImage(string $name) : ImageView
     {
         $imageQuery = new Query(Image::CLASS_NAME);
@@ -49,7 +38,6 @@ class LeanCloudRepository implements RepositoryInterface
         $query = new Query(Record::CLASS_NAME);
         $query->matchesInQuery('image', $imageQuery)->addDescend('date')->_include('image');
 
-        /** @var Record[] $records */
         $records = $query->find();
 
         if ($records === []) {
@@ -60,6 +48,7 @@ class LeanCloudRepository implements RepositoryInterface
         $image = $records[0]->get('image');
         $image = $image->toModelParams();
 
+        /** @var Record $record */
         foreach ($records as $record) {
             $image['records'][] = $record->toModelParams();
         }
@@ -72,13 +61,13 @@ class LeanCloudRepository implements RepositoryInterface
         $query = new Query(Image::CLASS_NAME);
         $query->limit($limit)->skip($skip)->addDescend('createdAt');
 
-        /** @var Image[] $images */
         $images = $query->find();
 
         if ($images === []) {
             throw NotFoundException::images();
         }
 
+        /** @var Image $image */
         foreach ($images as $i => $image) {
             $images[$i] = new ImageModel($image->toModelParams());
         }
@@ -89,7 +78,7 @@ class LeanCloudRepository implements RepositoryInterface
     public function getRecord(string $market, Date $date) : RecordView
     {
         $query = new Query(Record::CLASS_NAME);
-        $query->equalTo('market', $market)->equalTo('date', $date->get()->format('Ymd'))->_include('image');
+        $query->equalTo('market', $market)->equalTo('date', $date->format('Ymd'))->_include('image');
 
         $record = $query->find();
 
@@ -112,9 +101,8 @@ class LeanCloudRepository implements RepositoryInterface
     public function findImagesByDate(Date $date) : array
     {
         $query = new Query(Record::CLASS_NAME);
-        $query->equalTo('date', $date->get()->format('Ymd'))->descend('market')->_include('image');
+        $query->equalTo('date', $date->format('Ymd'))->descend('market')->_include('image');
 
-        /** @var Record[] $records */
         $records = $query->find();
 
         if ($records === []) {
@@ -123,6 +111,7 @@ class LeanCloudRepository implements RepositoryInterface
 
         $images = [];
 
+        /** @var Record $record */
         foreach ($records as $record) {
             /** @var Image $image */
             $image = $record->get('image');
@@ -146,7 +135,7 @@ class LeanCloudRepository implements RepositoryInterface
     public function findMarketsHaveRecordOn(Date $date, array $markets) : array
     {
         $query = new Query(Record::CLASS_NAME);
-        $query->equalTo('date', $date->get()->format('Ymd'))->containedIn('market', $markets);
+        $query->equalTo('date', $date->format('Ymd'))->containedIn('market', $markets);
         $results = $query->find();
 
         /** @var Record $result */
@@ -159,7 +148,7 @@ class LeanCloudRepository implements RepositoryInterface
 
     public function save(RecordModel $record, ImageModel $image) : void
     {
-        $this->logger->debug("Got record {$record->market} {$record->date->get()->format('Y/n/j')}");
+        $this->logger->debug("Got record {$record->market} {$record->date->format('Y/n/j')}");
         $image = $this->findOrCreateImage($image, $record);
         $record = $this->createRecord($record, $image);
         $results = $this->findDuplicateRecord($record);
