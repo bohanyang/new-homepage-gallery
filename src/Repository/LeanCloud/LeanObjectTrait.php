@@ -4,7 +4,7 @@ namespace App\Repository\LeanCloud;
 
 trait LeanObjectTrait
 {
-    abstract public function toJSON();
+    abstract protected function toJSON();
 
     public function getData()
     {
