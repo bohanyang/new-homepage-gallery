@@ -69,8 +69,7 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
         return [
             'cc' => ClearCache::class,
             'batch' => Batch::class,
-            'wake_up' => WakeUp::class,
-            'test_log' => TestLog::class
+            'wake_up' => WakeUp::class
         ];
     }
 
