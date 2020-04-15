@@ -4,7 +4,7 @@ namespace App\LeanEngine;
 
 use function basename;
 use function dirname;
-use function exec;
+use function shell_exec;
 use function sprintf;
 
 class ClearCache
@@ -25,9 +25,9 @@ class ClearCache
         $cache_dir_this = basename($this->dir);
         $dir_to_remove = $this->env === $cache_dir_this ? $cache_dir_parent : $this->dir;
         $dir_to_remove_parent = dirname($dir_to_remove);
-        $list_before_remove = exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
-        //$remove = exec(sprintf('rm -rf "%s"', $dir_to_remove));
-        $list_after_remove = exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
+        $list_before_remove = shell_exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
+        $remove = shell_exec(sprintf('rm -rf "%s"', $dir_to_remove));
+        $list_after_remove = shell_exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
 
         return [
             'cache_dir' => $this->dir,
@@ -37,7 +37,7 @@ class ClearCache
             'dir_to_remove' => $dir_to_remove,
             'dir_to_remove_parent' => $dir_to_remove_parent,
             'list_before_remove' => $list_before_remove,
-            //'remove' => $remove,
+            'remove' => $remove,
             'list_after_remove' => $list_after_remove
         ];
     }
