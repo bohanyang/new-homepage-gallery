@@ -83,7 +83,7 @@
     "repositories": {
         "0": {
             "type": "vcs",
-            "url": "https://e.coding.net/brent/bing-wallpaper.git"
+            "url": "https://youthdna@dev.azure.com/youthdna/bing-wallpaper/_git/bing-wallpaper"
         },
         "packagist": {
             "type": "composer",

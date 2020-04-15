@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "61e0705d87929c82757b9e637fb96964",
+    "content-hash": "56db8c1ee6844aabafdac1c560fb1e49",
     "packages": [
         {
             "name": "beberlei/assert",
@@ -79,7 +79,7 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://e.coding.net/brent/bing-wallpaper.git",
+                "url": "https://youthdna@dev.azure.com/youthdna/bing-wallpaper/_git/bing-wallpaper",
                 "reference": "22adb5d511df87b62212a678b4ac8157747e80ae"
             },
             "dist": {
