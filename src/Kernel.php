@@ -53,9 +53,4 @@ class Kernel extends BaseKernel
         $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         $routes->import($confDir.'/{routes}'.self::CONFIG_EXTS, '/', 'glob');
     }
-
-    public function getCacheDir()
-    {
-        return sys_get_temp_dir().'/cache/'.$this->environment;
-    }
 }
