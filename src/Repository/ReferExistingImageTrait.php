@@ -7,7 +7,7 @@ use App\Model\Record;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
-trait RepositoryTrait
+trait ReferExistingImageTrait
 {
     /** @var LoggerInterface */
     private $logger;
@@ -31,7 +31,7 @@ trait RepositoryTrait
             $this->logger->debug('Set last appeared on (which was null)');
             $pointer->setLastAppearedOn($record->date);
         } elseif ($date->get() < $record->date->get()) {
-            $this->logger->debug("Set last appeared on (which was {$date->get()->format('Y/n/j')})");
+            $this->logger->debug("Set last appeared on (which was {$date->format('Y/n/j')})");
             $pointer->setLastAppearedOn($record->date);
         }
     }
