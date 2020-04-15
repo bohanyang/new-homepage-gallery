@@ -8,16 +8,18 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Types\Type;
 
-class SelectQuery
+final class SelectQuery
 {
+    /** @var int */
     private $counter = 0;
 
+    /** @var string[] */
     private $selects = [];
 
-    private $tableMap = [];
-
-    private $columnMap = [];
+    /** @var array */
+    private $aliasMap = [];
 
     /** @var AbstractPlatform */
     private $platform;
@@ -34,9 +36,12 @@ class SelectQuery
         $this->platform = $conn->getDatabasePlatform();
     }
 
-    public function addTable(AbstractTable $table, array $columns, ?string $tableAlias = null) : string
+    /**
+     * @return string The table name to be used in the FROM clause and the array key of results
+     */
+    public function addTable(AbstractTable $table, array $columns, string $tableAlias = null) : string
     {
-        $tableAlias = ($tableAlias === null) ? '' : $tableAlias . '.';
+        $tableAlias = $tableAlias === null ? '' : $tableAlias . '.';
 
         foreach ($columns as $column) {
             $this->addAlias($table, $tableAlias, $column);
@@ -47,11 +52,13 @@ class SelectQuery
 
     private function addAlias(AbstractTable $table, string $tableAlias, string $column) : void
     {
-        $alias = 'c' . $this->counter++;
-        $this->selects[] = "$tableAlias$column $alias";
-        $alias = $this->platform->getSQLResultCasing($alias);
-        $this->tableMap[$alias] = $table;
-        $this->columnMap[$alias] = $column;
+        $alias = $this->platform->getSQLResultCasing('c' . $this->counter++);
+        $this->selects[] = "${tableAlias}${column} ${alias}";
+        $this->aliasMap[$alias] = [
+            $table->getName(),
+            $table->getField($column),
+            $table->getColumnType($column)
+        ];
     }
 
     public function getBuilder() : QueryBuilder
@@ -59,42 +66,14 @@ class SelectQuery
         return $this->builder = $this->conn->createQueryBuilder()->select($this->selects);
     }
 
-    public function fetchAll() : array
+    public function fetchAll()
     {
-        return $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
-    }
-
-    public function getData() : array
-    {
-        $results = $this->fetchAll();
+        $results = $this->builder->execute()->fetchAll(FetchMode::ASSOCIATIVE);
 
         foreach ($results as $i => $result) {
-            foreach ($result as $alias => $value) {
-                if (isset($this->tableMap[$alias]) && $value !== null) {
-                    /** @var AbstractTable $table */
-                    $table = $this->tableMap[$alias];
-                    $column = $this->columnMap[$alias];
-                    $field = $table->getField($column);
-                    $results[$i][$table->getName()][$field] = $table->applyResultCallback($column, $value);
-                }
-            }
-        }
-
-        return $results;
-    }
-
-    public function getResults() : array
-    {
-        $results = $this->fetchAll();
-
-        foreach ($results as $i => $result) {
-            foreach ($result as $alias => $value) {
-                if (isset($this->tableMap[$alias]) && $value !== null) {
-                    /** @var AbstractTable $table */
-                    $table = $this->tableMap[$alias];
-                    $column = $this->columnMap[$alias];
-                    $results[$i][$table->getName()][$column] = $table->applyResultCallback($column, $value);
-                }
+            foreach ($this->aliasMap as $alias => [$table, $field, $type]) {
+                /** @var Type $type */
+                $results[$i][$table][$field] = $type->convertToPHPValue($result[$alias], $this->platform);
             }
         }
 

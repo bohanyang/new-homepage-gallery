@@ -1,11 +1,8 @@
 <?php
 
-namespace App\EventSubscriber;
+namespace App\LeanEngine;
 
 use App\LeanCloud;
-use App\LeanCloudFunctions\Batch;
-use App\LeanCloudFunctions\TestClearCache;
-use App\LeanCloudFunctions\WakeUp;
 use LeanCloud\Engine\Cloud;
 use LeanCloud\Engine\LeanEngine;
 use LeanCloud\User;
@@ -23,7 +20,7 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
     /** @var ContainerInterface */
     private $container;
 
-    public function __construct(/** @scrutinizer ignore-unused */ LeanCloud $LeanCloud, ContainerInterface $container)
+    public function __construct(LeanCloud $LeanCloud, ContainerInterface $container)
     {
         $this->container = $container;
     }
@@ -70,7 +67,7 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
     public static function getSubscribedServices()
     {
         return [
-            'clear_cache' => TestClearCache::class,
+            'cc' => ClearCache::class,
             'batch' => Batch::class,
             'wake_up' => WakeUp::class
         ];
@@ -78,12 +75,10 @@ class LeanEngineSubscriber extends LeanEngine implements EventSubscriberInterfac
 
     public function defineCloudFunctions()
     {
-        $functions = ['clear_cache', 'batch', 'wake_up'];
-
-        foreach ($functions as $name) {
+        foreach (self::getSubscribedServices() as $name => $class) {
             Cloud::define(
                 $name,
-                function (array $params, ?User $user, array $meta) use ($name) {
+                function (?array $params, ?User $user, array $meta) use ($name) {
                     return $this->container->get($name)($params, $user, $meta);
                 }
             );

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\LeanCloudFunctions;
+namespace App\LeanEngine;
 
 use App\Collector;
 use LeanCloud\Client;

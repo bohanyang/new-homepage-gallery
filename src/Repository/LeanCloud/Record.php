@@ -26,13 +26,18 @@ final class Record extends LeanObject
         $data = $this->getData();
         unset($data['image']);
         $data = Helper::array_replace_keys($data, self::FIELD_MAPPINGS);
-        $data['date'] = Date::createFromYmd($data['date']);
+        $data['date'] = $this->getDate();
 
         return $data;
     }
 
+    public function getDate() : Date
+    {
+        return Date::createFromYmd($this->get('date'));
+    }
+
     public function setDate(Date $date) : void
     {
-        $this->set('date', $date->get()->format('Ymd'));
+        $this->set('date', $date->format('Ymd'));
     }
 }

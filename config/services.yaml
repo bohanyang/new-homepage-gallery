@@ -97,3 +97,8 @@ services:
 
     App\Collector:
         $repository: '@App\Repository\LeanCloudRepository'
+
+    App\LeanEngine\ClearCache:
+        arguments:
+            - '%kernel.cache_dir%'
+            - '%kernel.environment%'

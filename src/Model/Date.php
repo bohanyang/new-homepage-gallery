@@ -5,21 +5,29 @@ namespace App\Model;
 use DateTimeInterface;
 use DateTimeZone;
 use Safe\DateTimeImmutable;
+use Safe\Exceptions\DatetimeException;
 
 final class Date
 {
+    /** @var DateTimeImmutable */
     private $date;
 
     private function __construct()
     {
     }
 
-    public static function createFromYmd(string $date)
+    /** @throws DatetimeException */
+    public static function createFromFormat(string $format, string $date)
     {
         $instance = new self();
-        $instance->date = DateTimeImmutable::createFromFormat('!Ymd', $date, new DateTimeZone('UTC'));
+        $instance->date = DateTimeImmutable::createFromFormat('!' . $format, $date, new DateTimeZone('UTC'));
 
         return $instance;
+    }
+
+    public static function createFromYmd(string $date)
+    {
+        return self::createFromFormat('Ymd', $date);
     }
 
     public static function createFromLocal(DateTimeInterface $date)
@@ -30,8 +38,7 @@ final class Date
     public static function createFromUTC(DateTimeInterface $date)
     {
         $instance = new self();
-        $date = new DateTimeImmutable("@{$date->getTimestamp()}");
-        $instance->date = $date->setTime(0, 0, 0);
+        $instance->date = (new DateTimeImmutable("@{$date->getTimestamp()}"))->setTime(0, 0);
 
         return $instance;
     }
@@ -39,5 +46,10 @@ final class Date
     public function get() : DateTimeImmutable
     {
         return $this->date;
+    }
+
+    public function format(string $format) : string
+    {
+        return $this->date->format($format);
     }
 }
