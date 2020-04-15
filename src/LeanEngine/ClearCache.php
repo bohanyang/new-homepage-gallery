@@ -2,36 +2,43 @@
 
 namespace App\LeanEngine;
 
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\HttpKernel\KernelInterface;
+use function basename;
+use function dirname;
+use function exec;
+use function sprintf;
 
 class ClearCache
 {
-    /**
-     * @var KernelInterface
-     */
-    private $kernel;
+    private $dir;
 
-    public function __construct(KernelInterface $kernel)
+    private $env;
+
+    public function __construct(string $dir, string $env)
     {
-        $this->kernel = $kernel;
+        $this->dir = $dir;
+        $this->env = $env;
     }
 
     public function __invoke()
     {
-        $app = new Application($this->kernel);
-        $app->setAutoExit(false);
-        $input = new ArrayInput(
-            [
-                'command' => 'cache:clear',
-                '--no-warmup' => true
-            ]
-        );
-        $output = new BufferedOutput();
-        $app->run($input, $output);
+        $cache_dir_parent = dirname($this->dir);
+        $cache_dir_this = basename($this->dir);
+        $dir_to_remove = $this->env === $cache_dir_this ? $cache_dir_parent : $this->dir;
+        $dir_to_remove_parent = dirname($dir_to_remove);
+        $list_before_remove = exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
+        $remove = exec(sprintf('rm -rf "%s"', $dir_to_remove));
+        $list_after_remove = exec(sprintf('ls -la "%s"', $dir_to_remove_parent));
 
-        return $output->fetch();
+        return [
+            'cache_dir' => $this->dir,
+            'cache_dir_parent' => $cache_dir_parent,
+            'environment' => $this->env,
+            'cache_dir_this' => $cache_dir_this,
+            'dir_to_remove' => $dir_to_remove,
+            'dir_to_remove_parent' => $dir_to_remove_parent,
+            'list_before_remove' => $list_before_remove,
+            'remove' => $remove,
+            'list_after_remove' => $list_after_remove
+        ];
     }
 }

@@ -105,3 +105,8 @@ services:
             $appSecret: '%env(FEISHU_APP_SECRET)%'
             $channel: '%env(json:FEISHU_CHANNEL)%'
             $level: !php/const Monolog\Logger::WARNING
+
+    App\LeanEngine\ClearCache:
+        arguments:
+            - '%kernel.cache_dir%'
+            - '%kernel.environment%'
