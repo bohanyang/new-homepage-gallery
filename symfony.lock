@@ -344,6 +344,9 @@
     "symfony/polyfill-intl-idn": {
         "version": "v1.15.0"
     },
+    "symfony/polyfill-intl-messageformatter": {
+        "version": "v1.15.0"
+    },
     "symfony/polyfill-mbstring": {
         "version": "v1.15.0"
     },
