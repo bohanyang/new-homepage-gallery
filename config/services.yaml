@@ -98,12 +98,12 @@ services:
     App\Collector:
         $repository: '@App\Repository\LeanCloudRepository'
 
-    App\Monolog\FeishuBotHandler:
-        class: App\Monolog\FeishuBotHandler
+    App\Monolog\LarkBotHandler:
+        class: App\Monolog\LarkBotHandler
         arguments:
-            $appId: '%env(FEISHU_APP_ID)%'
-            $appSecret: '%env(FEISHU_APP_SECRET)%'
-            $channel: '%env(json:FEISHU_CHANNEL)%'
+            $appId: '%env(LARK_APP_ID)%'
+            $appSecret: '%env(LARK_APP_SECRET)%'
+            $channel: '%env(json:LARK_CHANNEL)%'
             $level: !php/const Monolog\Logger::WARNING
 
     App\LeanEngine\ClearCache:
