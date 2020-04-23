@@ -41,7 +41,7 @@ class LarkBotHandler extends AbstractProcessingHandler
         string $appSecret,
         array $channel,
         CacheInterface $cache,
-        string $apiHost = self::API_GLOBAL,
+        string $apiHost = self::API_CN,
         $level = Logger::DEBUG,
         bool $bubble = true
     ) {
