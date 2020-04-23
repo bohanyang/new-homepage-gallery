@@ -1,6 +1,6 @@
 services:
    oracle.listener:
-       class: App\EventSubscriber\OracleSessionInit
+       class: App\EventSubscriber\OracleSessionInitSubscriber
        tags:
            - { name: doctrine.event_listener, event: postConnect }
 
