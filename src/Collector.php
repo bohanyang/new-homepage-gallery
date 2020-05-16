@@ -10,12 +10,10 @@ use BohanYang\BingWallpaper\Client;
 use BohanYang\BingWallpaper\CurrentTime;
 use BohanYang\BingWallpaper\Market;
 use BohanYang\BingWallpaper\RequestParams;
-
 use Psr\Log\LoggerInterface;
 
 use function array_diff;
 use function array_keys;
-use function Safe\json_encode as json_encode;
 
 class Collector
 {
@@ -88,6 +86,16 @@ class Collector
         foreach ($this->client->batch($requests) as $result) {
             $this->saveResult($result);
         }
+    }
+
+    public function collectOne(string $market, int $offset)
+    {
+        $market = new Market($market);
+        $request = RequestParams::createFromOffset($market, $offset);
+        $result = $this->client->fetch($request);
+        $this->saveResult($result);
+
+        return $result;
     }
 
     private function saveResult(array $result) : void

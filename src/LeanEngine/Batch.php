@@ -23,6 +23,10 @@ class Batch
 
         Client::getStorage()->set('LC_SessionToken', $params['sessionToken']);
 
+        if (isset($params['market']) && isset($params['offset'])) {
+            return $this->collector->collectOne($params['market'], $params['offset']);
+        }
+
         $this->collector->collect();
 
         return 'OK';
