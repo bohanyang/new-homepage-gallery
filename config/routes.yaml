@@ -106,4 +106,3 @@ clear:
     requirements:
         token: '\d{6}'
     methods: GET
-
