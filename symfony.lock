@@ -24,7 +24,7 @@
         "version": "1.6.4"
     },
     "doctrine/dbal": {
-        "version": "v2.10.1"
+        "version": "2.10.2"
     },
     "doctrine/doctrine-bundle": {
         "version": "2.0",
@@ -215,7 +215,7 @@
         "version": "v5.0.7"
     },
     "symfony/doctrine-bridge": {
-        "version": "v5.0.7"
+        "version": "v5.0.8"
     },
     "symfony/dom-crawler": {
         "version": "v5.0.7"
@@ -322,9 +322,6 @@
     },
     "symfony/options-resolver": {
         "version": "v5.0.7"
-    },
-    "symfony/orm-pack": {
-        "version": "v1.0.8"
     },
     "symfony/phpunit-bridge": {
         "version": "4.3",
