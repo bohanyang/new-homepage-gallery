@@ -7,6 +7,8 @@
         "ext-iconv": "*",
         "ext-json": "*",
         "brentybh/bing-wallpaper": "dev-master",
+        "doctrine/doctrine-bundle": "*",
+        "doctrine/doctrine-migrations-bundle": "*",
         "ipip/db": "^1.0",
         "league/uri": "^6.0",
         "league/uri-components": "^2.1",
@@ -19,8 +21,6 @@
         "symfony/form": "*",
         "symfony/framework-bundle": "*",
         "symfony/monolog-bundle": "^3.4",
-        "symfony/orm-pack": "^1.0",
-        "symfony/test-pack": "^1.0",
         "symfony/polyfill-intl-messageformatter": "^1.14",
         "symfony/translation": "5.0.*",
         "symfony/twig-bundle": "*",
@@ -32,7 +32,8 @@
         "sensiolabs/security-checker": "^6.0",
         "symfony/debug-pack": "^1.0",
         "symfony/dotenv": "*",
-        "symfony/maker-bundle": "^1.13"
+        "symfony/maker-bundle": "^1.13",
+        "symfony/test-pack": "^1.0"
     },
     "config": {
         "preferred-install": {
