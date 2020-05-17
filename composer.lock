@@ -82,12 +82,6 @@
                 "url": "https://youthdna@dev.azure.com/youthdna/bing-wallpaper/_git/bing-wallpaper",
                 "reference": "22adb5d511df87b62212a678b4ac8157747e80ae"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/brentybh/bing-wallpaper/zipball/22adb5d511df87b62212a678b4ac8157747e80ae",
-                "reference": "22adb5d511df87b62212a678b4ac8157747e80ae",
-                "shasum": ""
-            },
             "require": {
                 "beberlei/assert": "^3.2",
                 "ext-json": "*",
@@ -103,10 +97,6 @@
                 "psr-4": {
                     "BohanYang\\BingWallpaper\\": "src/"
                 }
-            },
-            "support": {
-                "source": "https://github.com/brentybh/bing-wallpaper/tree/master",
-                "issues": "https://github.com/brentybh/bing-wallpaper/issues"
             },
             "time": "2020-04-01T08:54:02+00:00"
         },
