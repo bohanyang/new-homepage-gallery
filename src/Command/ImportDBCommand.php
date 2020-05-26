@@ -12,16 +12,18 @@ class ImportDBCommand extends Command
 {
     /** @var DoctrineRepository */
     private $source;
-    
+
     /** @var DoctrineRepository */
     private $destination;
 
+    /*
     public function __construct(DoctrineRepository $postgres, DoctrineRepository $sqlite)
     {
         parent::__construct();
         $this->source = $postgres;
         $this->destination = $sqlite;
     }
+    */
 
     protected static $defaultName = 'app:import-db';
 

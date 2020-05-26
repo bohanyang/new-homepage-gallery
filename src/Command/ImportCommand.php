@@ -18,11 +18,13 @@ class ImportCommand extends Command
     /** @var LeanCloudDoctrineReplicator */
     private $replicator;
 
+    /*
     public function __construct(LeanCloudDoctrineReplicator $replicator)
     {
         parent::__construct();
         $this->replicator = $replicator;
     }
+    */
 
     protected static $defaultName = 'app:import';
 
