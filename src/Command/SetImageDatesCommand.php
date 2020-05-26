@@ -21,12 +21,14 @@ class SetImageDatesCommand extends Command
     /** @var LeanCloudRepository */
     private $leancloud;
 
+    /*
     public function __construct(DoctrineRepository $doctrine, LeanCloudRepository $leancloud)
     {
         parent::__construct();
         $this->doctrine = $doctrine;
         $this->leancloud = $leancloud;
     }
+    */
 
     protected static $defaultName = 'app:set-image-dates';
 
