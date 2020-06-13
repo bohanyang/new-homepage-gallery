@@ -17,6 +17,7 @@
         "spatie/data-transfer-object": "^1.13",
         "spomky-labs/otphp": "^10.0",
         "symfony/console": "*",
+        "symfony/dotenv": "*",
         "symfony/flex": "^1.3.1",
         "symfony/form": "*",
         "symfony/framework-bundle": "*",
@@ -30,7 +31,6 @@
     "require-dev": {
         "sensiolabs/security-checker": "^6.0",
         "symfony/debug-pack": "^1.0",
-        "symfony/dotenv": "*",
         "symfony/maker-bundle": "^1.13",
         "symfony/test-pack": "^1.0"
     },
