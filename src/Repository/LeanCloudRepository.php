@@ -169,7 +169,12 @@ class LeanCloudRepository implements RepositoryInterface
         $object = $query->find();
 
         if ($object === []) {
-            $this->logger->debug('Create Image: ' . $image->name);
+            if (isset($image->vid)) {
+                $this->logger->notice('New image with video: ' . $image->name);
+            } else {
+                $this->logger->debug('Create Image: ' . $image->name);
+            }
+
             $object = new Image();
 
             foreach ($image as $field => $value) {
