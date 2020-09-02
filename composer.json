@@ -83,7 +83,7 @@
     "repositories": {
         "0": {
             "type": "vcs",
-            "url": "https://github.com/brentybh/bing-wallpaper.git"
+            "url": "https://github.com/bohanyang/bing-wallpaper.git"
         }
     }
 }
