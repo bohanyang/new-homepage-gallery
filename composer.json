@@ -2,7 +2,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "7.4.*",
+        "php": "^7.2.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-json": "*",
@@ -23,7 +23,7 @@
         "symfony/framework-bundle": "*",
         "symfony/monolog-bundle": "^3.4",
         "symfony/polyfill-intl-messageformatter": "^1.14",
-        "symfony/translation": "5.0.*",
+        "symfony/translation": "*",
         "symfony/twig-bundle": "*",
         "symfony/validator": "*",
         "symfony/yaml": "*",
@@ -84,11 +84,7 @@
     "repositories": {
         "0": {
             "type": "vcs",
-            "url": "https://youthdna@dev.azure.com/youthdna/bing-wallpaper/_git/bing-wallpaper"
-        },
-        "packagist": {
-            "type": "composer",
-            "url": "https://mirrors.aliyun.com/composer/"
+            "url": "https://github.com/bohanyang/bing-wallpaper.git"
         }
     }
 }
