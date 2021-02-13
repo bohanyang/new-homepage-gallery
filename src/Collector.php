@@ -44,7 +44,6 @@ class Collector
         'en-IN',
         'zh-CN',
         'ja-JP',
-        'en-AU',
     ];
 
     /** @return RequestParams[] */
