@@ -75,6 +75,9 @@
     "doctrine/sql-formatter": {
         "version": "1.1.0"
     },
+    "friendsofphp/proxy-manager-lts": {
+        "version": "v1.0.3"
+    },
     "guzzlehttp/guzzle": {
         "version": "6.5.4"
     },
@@ -146,18 +149,6 @@
     },
     "ralouphie/getallheaders": {
         "version": "3.0.3"
-    },
-    "sensiolabs/security-checker": {
-        "version": "4.0",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "4.0",
-            "ref": "160c9b600564faa1224e8f387d49ef13ceb8b793"
-        },
-        "files": [
-            "./config/packages/security_checker.yaml"
-        ]
     },
     "spatie/data-transfer-object": {
         "version": "1.13.3"
@@ -274,9 +265,6 @@
             "./src/Kernel.php"
         ]
     },
-    "symfony/http-client": {
-        "version": "v5.1.0"
-    },
     "symfony/http-client-contracts": {
         "version": "v2.1.2"
     },
@@ -300,9 +288,6 @@
             "version": "1.0",
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
-    },
-    "symfony/mime": {
-        "version": "v5.1.0"
     },
     "symfony/monolog-bridge": {
         "version": "v5.1.0"
