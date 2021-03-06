@@ -9,15 +9,20 @@
             </div>
             <div class="modal-body" style="padding-bottom: 5px;">
                 <ul>
-                    <li>
-                        {% if image.wp %}
+                    {% if image.uhd %}
+                        <li>
+                            <a href="{{ image_origin }}{{ image.urlbase }}_UHD.jpg" target="_blank">
+                                {{ 'image_sizes.UHD'|trans }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if image.wp %}
+                        <li>
                             <a href="{{ image_origin }}{{ image.urlbase }}_1920x1200.jpg" target="_blank">
                                 {{ 'image_sizes.1920x1200'|trans }}
                             </a>
-                        {% else %}
-                            <strong>{{ 'not_available'|trans }}</strong>
-                        {% endif %}
-                    </li>
+                        </li>
+                    {% endif %}
                     <li>
                         <a href="{{ image_origin }}{{ image.urlbase }}_1920x1080.jpg" target="_blank">
                             {{ 'image_sizes.1920x1080'|trans }}

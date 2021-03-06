@@ -18,6 +18,7 @@ final class Image extends LeanObject implements ImagePointerInterface
     {
         $data = $this->getData();
         unset($data['available'], $data['lastAppearedOn'], $data['firstAppearedOn']);
+        $data['uhd'] = $this->hasUhd();
 
         return $data;
     }
@@ -32,18 +33,14 @@ final class Image extends LeanObject implements ImagePointerInterface
         return $this->get('copyright');
     }
 
-    public function getLastAppearedOn() : ?Date
+    public function getLastAppearedOn() : Date
     {
-        $date = $this->get('lastAppearedOn');
-
-        return $date === null ? $date : Date::createFromUTC($date);
+        return Date::createFromUTC($this->get('lastAppearedOn'));
     }
 
-    public function getFirstAppearedOn() : ?Date
+    public function getFirstAppearedOn() : Date
     {
-        $date = $this->get('firstAppearedOn');
-
-        return $date === null ? $date : Date::createFromUTC($date);
+        return Date::createFromUTC($this->get('firstAppearedOn'));
     }
 
     public function setLastAppearedOn(Date $date) : void
@@ -54,5 +51,45 @@ final class Image extends LeanObject implements ImagePointerInterface
     public function setFirstAppearedOn(Date $date) : void
     {
         $this->set('firstAppearedOn', $date->get());
+    }
+
+    private const UHD_EXCEPTION = [
+        "ChipmunkCheeks",
+        "BauhausArchive",
+        "MiracleGarden",
+        "HopeValley",
+        "RielBridge",
+        "TwrMawr",
+        "Paepalanthus",
+        "CoveSpires",
+        "Mokuren",
+        "KiteFestivalChatelaillon",
+        "AutumnTreesNewEngland",
+        "HidingEggs",
+        "LaysanAlbatross",
+        "EasterFountain",
+        "CasaBatllo",
+        "StGeorgePainting",
+        "RainforestMoss",
+        "MaharashtraParagliding",
+        "Flatterulme",
+        "AustralianNationalWarMemorial",
+        "DowntownToronto",
+        "GlenfinnanViaduct",
+        "may1",
+        "GoliSoda",
+        "RamadanCharminar",
+        "SaintKabir",
+        "SalcombeDevon",
+        "GujaratStepWell",
+        "KagamiMirror",
+        "Mouse2020",
+        "AlpsWinter"
+    ];
+
+    private function hasUhd() : bool
+    {
+        return $this->get('firstAppearedOn') >= Date::createFromYmd('20190415')->get()
+            && !in_array($this->get('name'), self::UHD_EXCEPTION, true);
     }
 }

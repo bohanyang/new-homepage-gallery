@@ -20,4 +20,7 @@ final class Image extends DataTransferObject
 
 	/** @var array|null */
 	public $vid;
+
+	/** @var bool */
+	public $uhd;
 }

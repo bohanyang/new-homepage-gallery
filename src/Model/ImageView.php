@@ -21,6 +21,9 @@ final class ImageView extends DataTransferObject
 	/** @var array|null */
 	public $vid;
 
+    /** @var bool */
+    public $uhd;
+
     /** @var \App\Model\Record[] */
     public $records;
 }
